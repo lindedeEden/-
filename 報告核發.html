@@ -1,0 +1,265 @@
+<html class="light font-size-normal" lang="zh-TW"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>數據核發確認介面</title>
+<script>
+        (function () {
+            try {
+                var key = 'blood-morphology-font-level';
+                var classes = ['font-size-small', 'font-size-normal', 'font-size-large', 'font-size-xlarge'];
+                var raw = window.localStorage.getItem(key);
+                var level = parseInt(raw, 10);
+                if (isNaN(level)) level = 1;
+                level = Math.max(0, Math.min(3, level));
+                var root = document.documentElement;
+                classes.forEach(function (c) { root.classList.remove(c); });
+                root.classList.add(classes[level]);
+            } catch (e) {}
+        })();
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            /* 預設為 media：Chrome 在系統深色時會套用所有 dark:，與 Edge 顯示不一致；改為 class 且根節點不加 dark → 固定淺色 */
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1f5c7a",
+                        "medical-blue": "#2563eb",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#131b1f",
+                        "medical-red": "hsl(0, 70%, 45%)",
+                        "medical-red-soft": "hsla(0, 70%, 45%, 0.1)",
+                    },
+                    fontFamily: {
+                        "display": ["Noto Sans TC", "Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            html { color-scheme: light; }
+            ::-webkit-scrollbar { width: 4px; }
+            ::-webkit-scrollbar-track { background: transparent; }
+            ::-webkit-scrollbar-thumb { background: #d3dee4; border-radius: 10px; }
+        }
+        .modal-backdrop {
+            background: rgba(19, 27, 31, 0.4);
+            backdrop-filter: blur(8px);
+        }
+        .tabular { font-variant-numeric: tabular-nums; }
+</style>
+<link rel="stylesheet" href="assets/css/common.css"/>
+<link rel="stylesheet" href="assets/css/tutorial.css"/>
+</head>
+<body class="bg-background-light font-display h-screen min-h-0 flex items-center justify-center overflow-hidden p-2">
+<div class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-2 min-h-0 overflow-y-auto">
+<div class="bg-white w-full max-w-[1150px] h-auto max-h-[min(98vh,100%)] min-h-0 overflow-hidden rounded-xl shadow-2xl flex flex-col border border-zinc-300 my-auto">
+<div id="tutorial-report-tl">
+<div class="flex items-center justify-between px-6 py-3 border-b border-zinc-200 shrink-0">
+<div class="flex items-center gap-3">
+<h1 id="report-specimen-id" class="text-[#101619] text-xl font-black leading-tight tracking-tight tabular-nums"></h1>
+<div id="report-status-tags" class="flex flex-wrap items-center gap-2"></div>
+</div>
+<button type="button" class="flex items-center justify-center rounded-full h-8 w-8 hover:bg-zinc-100 transition-colors" id="btn-close" title="關閉">
+<span class="material-symbols-outlined text-zinc-600 text-xl">close</span>
+</button>
+</div>
+<div id="risk-banner" class="px-6 py-2.5 flex items-center justify-between gap-4 shrink-0">
+<div class="flex items-center gap-3">
+<span id="risk-icon" class="material-symbols-outlined text-base">info</span>
+<h2 id="risk-text" class="text-md font-bold leading-tight tracking-tight text-[#101619]">風險評估載入中…</h2>
+</div>
+</div>
+</div>
+<div class="flex-1 min-h-0 overflow-hidden p-4 grid grid-cols-1 md:grid-cols-12 gap-5">
+<div id="tutorial-report-bl" class="md:col-span-7 flex flex-col gap-2 min-h-0 h-full max-h-full overflow-hidden">
+<div class="flex items-center justify-between shrink-0">
+<h3 class="text-[#101619] dark:text-zinc-200 text-[11px] font-bold uppercase tracking-[0.15em] flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">science</span>
+                            血球分類計數 (WBC)
+                        </h3>
+</div>
+<div class="rounded-xl border border-zinc-300 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-sm flex-grow flex flex-col min-h-0">
+<div class="flex-grow min-h-0 overflow-y-auto overflow-x-auto overscroll-contain">
+<table class="w-full text-left border-collapse min-w-full">
+<thead class="sticky top-0 z-10">
+<tr class="bg-zinc-50 dark:bg-zinc-800/90 backdrop-blur-sm">
+<th class="px-4 py-2 text-zinc-600 dark:text-zinc-400 text-xs font-bold uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800">細胞類型</th>
+<th class="px-2 py-2 text-zinc-600 dark:text-zinc-400 text-xs font-bold uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800 text-right">流式計數(%)</th>
+<th class="px-2 py-2 text-zinc-600 dark:text-zinc-400 text-xs font-bold uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800 text-right">AI(%)</th>
+<th class="px-2 py-2 text-blue-700 dark:text-blue-400 text-xs font-bold uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800 text-right bg-blue-50/50 dark:bg-blue-900/20">人員編輯(%)</th>
+<th id="wbc-prev-report-header" class="px-2 py-2 text-zinc-600 dark:text-zinc-400 text-xs font-bold uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800 text-right">前次報告(%)</th>
+</tr>
+</thead>
+<tbody id="wbc-table-body" class="divide-y divide-zinc-100 dark:divide-zinc-800">
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="md:col-span-5 flex flex-col gap-4 min-h-0 overflow-y-auto overscroll-contain">
+<div id="tutorial-report-tr" class="flex flex-col gap-2 shrink-0">
+<h3 class="text-[#101619] dark:text-zinc-200 text-[11px] font-bold flex items-center gap-2 uppercase tracking-wide">
+<span class="material-symbols-outlined text-primary text-lg">patient_list</span>
+                            病患資訊
+                        </h3>
+<div class="bg-white dark:bg-zinc-800/40 rounded-xl border border-zinc-300 dark:border-zinc-800 overflow-hidden shadow-sm">
+<div class="grid grid-cols-2 p-3 gap-x-4 gap-y-2">
+<div class="col-span-2 pb-1 border-b border-zinc-200 dark:border-zinc-700 flex flex-col gap-0.5">
+<span class="text-zinc-600 text-[9px] tracking-wider font-bold">檢體編號</span>
+<span class="text-zinc-900 dark:text-zinc-100 text-sm font-bold tabular-nums">H5080720647</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<span class="text-zinc-600 text-[9px] tracking-wider font-bold">病歷號</span>
+<span class="text-zinc-900 dark:text-zinc-100 text-sm font-bold tabular-nums">12701633</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<span class="text-zinc-600 text-[9px] tracking-wider font-bold">姓名 (性別)</span>
+<span class="text-zinc-900 dark:text-zinc-100 text-sm font-bold">王O玲 (女)</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<span class="text-zinc-600 text-[9px] tracking-wider font-bold">生日 (年齡)</span>
+<span class="text-zinc-900 dark:text-zinc-100 text-sm font-bold tabular-nums">1995-08-15 (30 歲)</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<span class="text-zinc-600 text-[9px] tracking-wider font-bold">檢體來源</span>
+<span class="text-zinc-900 dark:text-zinc-100 text-sm font-bold">一般科</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<span class="text-zinc-600 text-[9px] tracking-wider font-bold">操作機台</span>
+<span class="text-zinc-900 dark:text-zinc-100 text-sm font-bold uppercase">DI2</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<span class="text-zinc-600 text-[9px] tracking-wider font-bold">檢體歸位</span>
+<span class="text-zinc-900 dark:text-zinc-100 text-sm font-bold tabular-nums">134-5</span>
+</div>
+</div>
+</div>
+</div>
+<div id="tutorial-report-br" class="flex flex-col gap-4">
+<div class="flex flex-col gap-2 shrink-0">
+<h3 class="text-[#101619] dark:text-zinc-200 text-[11px] font-bold flex items-center gap-2 uppercase tracking-wide">
+<span class="material-symbols-outlined text-primary text-lg">magnification_small</span>
+                            其他發現
+                        </h3>
+<div class="bg-white dark:bg-zinc-800/40 rounded-xl border border-zinc-300 dark:border-zinc-800 overflow-hidden shadow-sm">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-zinc-50/50 dark:bg-zinc-800/50">
+<th class="px-3 py-1.5 text-zinc-600 dark:text-zinc-400 text-[10px] font-bold uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-700">項目</th>
+<th class="px-2 py-1.5 text-zinc-600 dark:text-zinc-400 text-[10px] font-bold uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-700 text-right">流式計數</th>
+<th class="px-2 py-1.5 text-zinc-600 dark:text-zinc-400 text-[10px] font-bold uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-700 text-right">AI</th>
+<th class="px-2 py-1.5 text-blue-700 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-700 text-right bg-blue-50/50 dark:bg-blue-900/20">人員編輯</th>
+<th id="other-prev-report-header" class="px-2 py-1.5 text-zinc-600 dark:text-zinc-400 text-[10px] font-bold uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-700 text-right">前次報告</th>
+</tr>
+</thead>
+<tbody id="other-table-body" class="divide-y divide-zinc-50 dark:divide-zinc-800">
+</tbody>
+</table>
+</div>
+</div>
+<div class="flex flex-col gap-2 shrink-0">
+<h3 class="text-[#101619] dark:text-zinc-200 text-[11px] font-bold flex items-center gap-2 uppercase tracking-wide">
+<span class="material-symbols-outlined text-primary text-lg">analytics</span>
+                            CBC 數值
+                        </h3>
+<div class="bg-white dark:bg-zinc-800/40 rounded-xl border border-zinc-300 dark:border-zinc-800 overflow-hidden shadow-sm p-3">
+<div class="grid grid-cols-4 gap-y-3 gap-x-2">
+<div class="flex flex-col">
+<span class="text-zinc-600 text-[9px] font-bold uppercase tracking-tight">WBC</span>
+<span id="cbc-wbc" class="text-zinc-900 dark:text-zinc-100 text-sm font-bold tabular"></span>
+</div>
+<div class="flex flex-col">
+<span class="text-zinc-600 text-[9px] font-bold uppercase tracking-tight">RBC</span>
+<span id="cbc-rbc" class="text-zinc-900 dark:text-zinc-100 text-sm font-bold tabular"></span>
+</div>
+<div class="flex flex-col">
+<span class="text-zinc-600 text-[9px] font-bold uppercase tracking-tight">Hb</span>
+<span id="cbc-hb" class="text-zinc-900 dark:text-zinc-100 text-sm font-bold tabular"></span>
+</div>
+<div class="flex flex-col">
+<span class="text-zinc-600 text-[9px] font-bold uppercase tracking-tight">HCT</span>
+<span id="cbc-hct" class="text-zinc-900 dark:text-zinc-100 text-sm font-bold tabular"></span>
+</div>
+<div class="flex flex-col">
+<span class="text-zinc-600 text-[9px] font-bold uppercase tracking-tight">MCV</span>
+<span id="cbc-mcv" class="text-zinc-900 dark:text-zinc-100 text-sm font-bold tabular"></span>
+</div>
+<div class="flex flex-col">
+<span class="text-zinc-600 text-[9px] font-bold uppercase tracking-tight">MCH</span>
+<span id="cbc-mch" class="text-zinc-900 dark:text-zinc-100 text-sm font-bold tabular"></span>
+</div>
+<div class="flex flex-col">
+<span class="text-zinc-600 text-[9px] font-bold uppercase tracking-tight">MCHC</span>
+<span id="cbc-mchc" class="text-zinc-900 dark:text-zinc-100 text-sm font-bold tabular"></span>
+</div>
+<div class="flex flex-col">
+<span class="text-zinc-600 text-[9px] font-bold uppercase tracking-tight">PLT</span>
+<span id="cbc-plt" class="text-zinc-900 dark:text-zinc-100 text-sm font-bold tabular"></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="px-6 py-4 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between shrink-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-zinc-400 text-[20px]">account_circle</span>
+<div class="flex items-center gap-1.5">
+<span class="text-zinc-600 text-xs">當前操作者：</span>
+<span class="text-zinc-700 dark:text-zinc-300 text-xs font-bold">王小明 <span class="font-normal text-zinc-600">(M12345)</span></span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button type="button" class="px-5 py-2 bg-amber-500 text-white text-xs font-bold rounded-lg flex items-center gap-2 shadow-lg shadow-amber-500/30 border border-amber-500 transition-all hover:bg-amber-600 active:scale-95 hidden" id="manual-alert-btn">
+                        需拉片確認：改為人工鏡檢
+                        <span class="material-symbols-outlined text-[16px]">priority_high</span>
+</button>
+<button type="button" class="hidden px-5 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg flex items-center gap-2 shadow-lg shadow-emerald-600/30 border border-emerald-600 transition-all hover:bg-emerald-700 active:scale-95" id="follow-up-done-btn" title="實體拉片完成後點選，方可進行簽核">
+                        已拉片完成
+                        <span class="material-symbols-outlined text-[16px]">check_circle</span>
+</button>
+<button type="button" class="hidden px-3 py-2 bg-zinc-200 text-zinc-600 text-xs font-bold rounded-lg flex items-center gap-1.5 border border-zinc-300 cursor-pointer hover:bg-zinc-300 transition-colors" id="verify-lock-btn" title="點擊開鎖後可進行簽核；建議先點「已拉片完成」" aria-hidden="true" aria-label="點擊開鎖簽核">
+                        <span class="material-symbols-outlined text-[18px]" id="verify-lock-icon">lock</span>
+</button>
+<button type="button" class="px-6 py-2 bg-medical-blue text-white text-xs font-bold rounded-lg flex items-center gap-2 shadow-lg shadow-medical-blue/30 border border-medical-blue transition-all hover:bg-blue-700 active:scale-95" id="confirm-btn">
+                        確認並簽核
+                        <span class="material-symbols-outlined text-[16px]">draw</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed inset-0 -z-10 grid grid-cols-12 grid-rows-6 gap-4 p-8 opacity-5 pointer-events-none">
+<div class="col-span-3 row-span-2 bg-zinc-500 rounded-lg"></div>
+<div class="col-span-6 row-span-4 bg-zinc-500 rounded-lg"></div>
+<div class="col-span-3 row-span-3 bg-zinc-500 rounded-lg"></div>
+</div>
+
+  <!-- ▌ v2 架構層：必須在 database.js / common.js 之前載入 -->
+  <script src="src/config/config.js"></script>
+  <script src="src/constants/cell-types.js"></script>
+  <script src="src/services/api.service.js"></script>
+  <script src="src/services/auth.service.js"></script>
+  <script src="src/services/specimen.service.js"></script>
+  <script src="src/store/app.store.js"></script>
+  <!-- ▌ Auth Guard：未登入直接導回登入頁 -->
+  <script>AuthService.requireAuth();</script>
+  <!-- ▌ 原版資料與共用模組 -->
+  <script src="assets/data/database.js?v=20260601f"></script>
+<script src="assets/js/common.js?v=20260618k"></script>
+<script src="assets/js/tutorial.js?v=20260618t"></script>
+<script src="assets/js/report-issue.js?v=20260601f"></script>
+<script>
+(function () {
+  if (window.Tutorial) setTimeout(function () { Tutorial.runOnReportPage(); }, 200);
+})();
+</script>
+</body></html>

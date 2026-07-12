@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="font-size-normal">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>檢體管理 - 血球型態分類軟體</title>
+  <script>
+    (function () {
+      try {
+        var key = 'blood-morphology-font-level';
+        var classes = ['font-size-small', 'font-size-normal', 'font-size-large', 'font-size-xlarge'];
+        var raw = window.localStorage.getItem(key);
+        var level = parseInt(raw, 10);
+        if (isNaN(level)) level = 1;
+        level = Math.max(0, Math.min(3, level));
+        var root = document.documentElement;
+        classes.forEach(function (c) { root.classList.remove(c); });
+        root.classList.add(classes[level]);
+      } catch (e) {}
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#4F46E5",
+            "background-light": "#F8FAFC",
+            "surface-light": "#FFFFFF",
+            "text-light": "#334155",
+            "text-muted-light": "#475569",
+            "border-light": "#CBD5E1",
+            "danger-light": "#FEE2E2",
+            "danger-text-light": "#B91C1C",
+            "success-light": "#D1FAE5",
+            "success-text-light": "#059669",
+            "info-light": "#DBEAFE",
+            "info-text-light": "#2563EB",
+          },
+          fontFamily: { sans: ["Inter", "sans-serif"] },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="assets/css/common.css"/>
+  <link rel="stylesheet" href="assets/css/tutorial.css"/>
+</head>
+<body class="bg-background-light text-text-light text-sm min-h-0">
+  <div class="flex flex-col h-screen min-h-0 overflow-hidden">
+    <header class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 p-2 border-b bg-surface-light border-border-light shrink-0">
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 min-w-0">
+        <h1 class="text-lg font-semibold text-text-light">Intelligent Morphology Review Platform</h1>
+        <div class="flex space-x-2 text-sm text-text-muted-light">
+          <a class="hover:text-primary" href="index.html">首頁</a>
+          <a class="hover:text-primary" href="#">檔案(F)</a>
+          <a class="hover:text-primary" href="#">工具(T)</a>
+          <a class="hover:text-primary" href="#">說明(H)</a>
+          <button type="button" class="hover:text-primary focus:outline-none bg-transparent border-0 cursor-pointer text-inherit" id="btn-tutorial" title="使用教學">使用教學</button>
+          <button type="button" class="hover:text-primary focus:outline-none bg-transparent border-0 cursor-pointer text-inherit" id="btn-scenario-simulation" title="情境模擬測試">情境模擬測試</button>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 shrink-0">
+        <button type="button" class="p-2 rounded hover:bg-gray-100" title="縮小字型" id="font-smaller"><span class="material-symbols-outlined text-base">remove</span></button>
+        <button type="button" class="p-2 rounded hover:bg-gray-100" title="放大字型" id="font-larger"><span class="material-symbols-outlined text-base">add</span></button>
+        <button type="button" class="p-2 rounded hover:bg-gray-100" title="系統設定" id="btn-settings"><span class="material-symbols-outlined">settings</span></button>
+        <button type="button" class="p-2 rounded hover:bg-gray-100" title="登出"><span class="material-symbols-outlined">power_settings_new</span></button>
+      </div>
+    </header>
+
+    <div class="flex flex-grow overflow-hidden min-h-0 min-w-0" id="tutorial-specimen-full">
+      <main class="flex-grow flex flex-col p-2 space-y-2 min-h-0 min-w-0 overflow-hidden">
+        <div id="tutorial-area-tl">
+        <div class="flex flex-wrap items-center gap-4">
+          <div class="flex items-center space-x-2" id="tutorial-mode-tabs">
+            <div class="inline-flex rounded-md shadow-sm" role="group">
+              <button type="button" class="mode-tab px-4 py-2 text-sm font-medium border border-border-light rounded-l-md bg-surface-light text-text-muted-light hover:bg-gray-100" data-mode="digital" id="tab-digital">數位閱片</button>
+              <button type="button" class="mode-tab px-4 py-2 text-sm font-medium border border-border-light rounded-r-md bg-surface-light text-text-muted-light hover:bg-gray-100" data-mode="entity" id="tab-entity">實體作業</button>
+            </div>
+            <button type="button" class="flex items-center space-x-1 p-2 rounded-md border border-border-light bg-surface-light text-text-muted-light hover:bg-gray-100" id="btn-filter" aria-expanded="false">
+              <span class="material-symbols-outlined text-base">filter_list</span>
+              <span>篩選</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="filter-panel" class="bg-surface-light border border-border-light filter-row-fixed-font hidden">
+          <p class="font-medium text-text-muted-light filter-panel-title">檢體狀態（勾選要顯示的狀態）</p>
+          <div class="filter-panel-check-row">
+            <label class="inline-flex items-center"><input type="checkbox" class="status-filter rounded border-gray-300 text-primary focus:ring-primary" value="PLT Check"/> <span class="ml-1">血小板確認</span></label>
+            <label class="inline-flex items-center"><input type="checkbox" class="status-filter rounded border-gray-300 text-primary focus:ring-primary" value="AI Alert"/> <span class="ml-1">AI分類警示</span></label>
+            <label class="inline-flex items-center"><input type="checkbox" class="status-filter rounded border-gray-300 text-primary focus:ring-primary" value="Follow-up"/> <span class="ml-1">需拉片確認</span></label>
+            <label class="inline-flex items-center"><input type="checkbox" class="status-filter rounded border-gray-300 text-primary focus:ring-primary" value="Digital Review"/> <span class="ml-1">數位閱片</span></label>
+            <label class="inline-flex items-center"><input type="checkbox" class="status-filter rounded border-gray-300 text-primary focus:ring-primary" value="Verified"/> <span class="ml-1">已完成</span></label>
+            <label class="inline-flex items-center"><input type="checkbox" class="status-filter rounded border-gray-300 text-primary focus:ring-primary" value="Locked"/> <span class="ml-1">鎖定中</span></label>
+          </div>
+        </div>
+
+        <div class="bg-surface-light border border-border-light filter-row-fixed-font" id="tutorial-filter-row">
+          <div class="filter-row-single-line">
+            <div class="filter-col filter-col-date">
+              <label class="block font-medium text-text-muted-light" for="analysis-date-start">檢驗日期</label>
+              <div class="filter-date-inputs">
+                <input id="analysis-date-start" type="date" value="2025-08-07"/>
+                <span class="shrink-0 text-text-muted-light">-</span>
+                <input id="analysis-date-end" type="date" value="2025-08-07"/>
+              </div>
+            </div>
+            <div class="filter-col filter-col-dept">
+              <label class="block font-medium text-text-muted-light" for="filter-department">送檢單位</label>
+              <select class="block w-full box-border" id="filter-department">
+                <option value="">所有單位</option>
+              </select>
+            </div>
+            <div class="filter-col filter-col-machine">
+              <label class="block font-medium text-text-muted-light" for="filter-machine">機台</label>
+              <select class="block w-full box-border" id="filter-machine">
+                <option value="">所有機台</option>
+              </select>
+            </div>
+            <div class="filter-col filter-col-search">
+              <label class="block font-medium text-text-muted-light" for="specimen-search">檢體搜尋</label>
+              <input class="block w-full box-border" id="specimen-search" placeholder="檢體 ID 或 病歷號" type="text"/>
+            </div>
+            <div class="filter-col filter-col-actions flex flex-nowrap items-center gap-3">
+              <button type="button" id="btn-search">搜尋</button>
+              <label class="inline-flex items-center gap-1 whitespace-nowrap">
+                <input class="rounded border-gray-300 text-primary focus:ring-primary shrink-0" type="checkbox" id="exact-match"/>
+                <span>僅顯示完全相符項</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <div class="flex-grow min-h-0 overflow-auto bg-surface-light rounded-md border border-border-light" id="tutorial-specimen-list">
+          <table class="w-full min-w-[720px] text-left">
+            <thead class="sticky top-0 bg-gray-50 z-10">
+              <tr>
+                <th class="p-2 font-semibold text-text-muted-light w-8"><input type="checkbox" id="select-all" title="全選"/></th>
+                <th class="p-2 font-semibold text-text-muted-light">狀態</th>
+                <th class="p-2 font-semibold text-text-muted-light sortable sort-urgency" data-sort="urgency" title="依時效排序"><span>時效</span> <span class="sort-icon sort-icon-asc material-symbols-outlined text-xs align-middle">arrow_drop_up</span><span class="sort-icon sort-icon-desc material-symbols-outlined text-xs align-middle hidden">arrow_drop_down</span></th>
+                <th class="p-2 font-semibold text-text-muted-light sortable sort-id" data-sort="id" title="依檢體 ID 後五碼排序"><span>檢體 ID</span> <span class="sort-icon sort-icon-asc material-symbols-outlined text-xs align-middle">arrow_drop_up</span><span class="sort-icon sort-icon-desc material-symbols-outlined text-xs align-middle hidden">arrow_drop_down</span></th>
+                <th class="p-2 font-semibold text-text-muted-light">病歷號</th>
+                <th class="p-2 font-semibold text-text-muted-light">姓名</th>
+                <th class="p-2 font-semibold text-text-muted-light">檢體來源</th>
+                <th class="p-2 font-semibold text-text-muted-light">操作機台</th>
+                <th class="p-2 font-semibold text-text-muted-light">檢體歸位</th>
+                <th class="p-2 font-semibold text-text-muted-light sortable sort-time" data-sort="time" title="依分析時間排序"><span>分析時間</span> <span class="sort-icon sort-icon-asc material-symbols-outlined text-xs align-middle">arrow_drop_up</span><span class="sort-icon sort-icon-desc material-symbols-outlined text-xs align-middle hidden">arrow_drop_down</span></th>
+                <th class="p-2 font-semibold text-text-muted-light">編輯人員</th>
+                <th class="p-2 font-semibold text-text-muted-light w-24">操作</th>
+              </tr>
+            </thead>
+            <tbody id="specimen-tbody" class="divide-y divide-border-light"></tbody>
+          </table>
+        </div>
+      </main>
+
+      <aside class="w-1/3 flex-shrink-0 flex flex-col p-2 border-l border-border-light bg-background-light min-w-[280px] min-h-0 overflow-hidden" id="tutorial-sidebar-overview">
+        <div class="bg-surface-light p-3 rounded-md border border-border-light flex-grow flex flex-col min-h-0 overflow-y-auto overflow-x-auto">
+          <div class="flex-shrink-0" id="tutorial-sidebar-header">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-base font-semibold">檢體總覽</h3>
+              <span class="text-sm font-medium text-primary" id="sidebar-specimen-id">-</span>
+            </div>
+            <div id="tutorial-sidebar-body">
+            <div id="sidebar-placeholder" class="text-text-muted-light text-sm py-4">
+              請從左側列表點選一筆檢體，或雙擊進入閱片。
+            </div>
+            <div id="sidebar-content" class="space-y-4 hidden">
+              <div>
+                <h4 class="text-sm font-semibold mb-2 text-text-light">檢體資訊</h4>
+                <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs" id="sidebar-info"></div>
+              </div>
+              <div class="border-t border-border-light pt-4">
+                <h4 class="text-sm font-semibold mb-3 text-text-light">分析與歷史</h4>
+                <div class="w-full text-xs overflow-x-auto">
+                  <table class="w-full border-collapse">
+                    <thead>
+                      <tr class="bg-gray-50">
+                        <th class="p-2 font-semibold text-left text-text-muted-light">Metric</th>
+                        <th class="p-2 font-semibold text-left text-text-muted-light">流式計數</th>
+                        <th class="p-2 font-semibold text-left text-text-muted-light">AI</th>
+                        <th class="p-2 font-semibold text-left text-text-muted-light" id="sidebar-prev-report-header">前次報告</th>
+                      </tr>
+                    </thead>
+                    <tbody id="sidebar-metrics" class="divide-y divide-border-light"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="flex flex-wrap justify-between items-center gap-y-1 p-2 border-t border-border-light bg-surface-light text-xs text-text-muted-light shrink-0">
+      <span id="footer-status">就緒</span>
+    </footer>
+  </div>
+
+  <div id="modal-leave-settings" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4" aria-modal="true" role="dialog" aria-labelledby="modal-leave-settings-title">
+    <div class="absolute inset-0 bg-black/40" id="modal-leave-settings-backdrop" aria-hidden="true"></div>
+    <div class="relative bg-white rounded-lg shadow-xl border border-border-light max-w-lg w-full max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between p-3 border-b border-border-light shrink-0">
+        <h2 id="modal-leave-settings-title" class="text-base font-semibold text-text-light">留單標準設定</h2>
+        <button type="button" class="p-1 rounded hover:bg-gray-100 text-text-muted-light" id="modal-leave-settings-close" aria-label="關閉">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+      <p class="px-3 pt-2 text-xs text-text-muted-light leading-relaxed shrink-0">以下門檻與<strong>影像閱片分析表</strong>、<strong>報告核發風險橫幅</strong>共用。數值型：數值<strong>≥</strong>門檻即視為達留單標準（單位與介面表格一致）。</p>
+      <div class="overflow-y-auto flex-1 p-3 min-h-0" id="modal-leave-settings-body"></div>
+      <div class="flex flex-wrap justify-end gap-2 p-3 border-t border-border-light shrink-0 bg-surface-light">
+        <button type="button" class="px-3 py-1.5 text-sm border border-border-light rounded-md hover:bg-gray-50 text-text-muted-light" id="modal-leave-settings-reset">還原預設</button>
+        <button type="button" class="px-3 py-1.5 text-sm border border-border-light rounded-md hover:bg-gray-50" id="modal-leave-settings-cancel">取消</button>
+        <button type="button" class="px-3 py-1.5 text-sm rounded-md bg-primary text-white hover:opacity-95" id="modal-leave-settings-save">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-scenario-simulation" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4" aria-modal="true" role="dialog" aria-labelledby="modal-scenario-simulation-title">
+    <div class="absolute inset-0 bg-black/40" id="modal-scenario-simulation-backdrop" aria-hidden="true"></div>
+    <div class="relative bg-white rounded-lg shadow-xl border border-border-light max-w-lg w-full max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between p-3 border-b border-border-light shrink-0">
+        <h2 id="modal-scenario-simulation-title" class="text-base font-semibold text-text-light">情境模擬測試</h2>
+        <button type="button" class="p-1 rounded hover:bg-gray-100 text-text-muted-light" id="modal-scenario-simulation-close" aria-label="關閉">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+      <div class="overflow-y-auto flex-1 p-3 min-h-0" id="modal-scenario-simulation-body"></div>
+      <div class="flex flex-wrap justify-end gap-2 p-3 border-t border-border-light shrink-0 bg-surface-light">
+        <button type="button" class="px-3 py-1.5 text-sm border border-border-light rounded-md hover:bg-gray-50" id="modal-scenario-simulation-cancel">取消</button>
+        <button type="button" class="px-3 py-1.5 text-sm rounded-md bg-primary text-white hover:opacity-95" id="modal-scenario-simulation-apply">套用情境</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="specimen-list-toast" class="fixed bottom-6 left-1/2 z-[200] max-w-[min(90vw,28rem)] -translate-x-1/2 hidden" role="status" aria-live="polite">
+    <div class="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 shadow-lg text-sm text-amber-950">
+      <span class="material-symbols-outlined text-amber-600 shrink-0 text-xl">info</span>
+      <span id="specimen-list-toast-text"></span>
+    </div>
+  </div>
+
+  <div id="specimen-list-context-menu" class="hidden fixed z-[300] min-w-[220px] py-1 bg-surface-light border border-border-light rounded-lg shadow-xl text-sm" role="menu" aria-hidden="true">
+    <button type="button" id="specimen-ctx-reopen-dr" class="w-full text-left px-3 py-2.5 hover:bg-gray-50 text-text-light text-xs font-medium">退回 Digital Review</button>
+  </div>
+
+  
+  <!-- ▌ v2 架構層：必須在 database.js / common.js 之前載入 -->
+  <script src="src/config/config.js"></script>
+  <script src="src/constants/cell-types.js"></script>
+  <script src="src/services/api.service.js"></script>
+  <script src="src/services/auth.service.js"></script>
+  <script src="src/services/specimen.service.js"></script>
+  <script src="src/store/app.store.js"></script>
+  <!-- ▌ Auth Guard：未登入直接導回登入頁 -->
+  <script>AuthService.requireAuth();</script>
+  <!-- ▌ 原版資料與共用模組 -->
+  <script src="assets/data/database.js?v=20260618g"></script>
+  <script src="assets/data/scenario-specimens.js?v=20260618g"></script>
+  <script src="assets/data/scenario-specimen-cells.js?v=20260618h"></script>
+  <script src="assets/js/legacy-ui.js?v=20260712a"></script>
+  <script src="assets/js/usability-study.js?v=20260618g"></script>
+  <script src="assets/js/common.js?v=20260618k"></script>
+  <script src="assets/js/tutorial.js?v=20260618t"></script>
+  <script>
+    (function () {
+      if (typeof LegacyUi !== 'undefined' && LegacyUi.isEnabled() && !LegacyUi.isOnLegacyPage()) {
+        window.location.replace(LegacyUi.resolvePageUrl('specimenList'));
+        return;
+      }
+      var currentSpecimenId = null;
+      var filteredList = [];
+      var currentMode = null;
+      var sortKey = 'time';
+      var sortAsc = false;
+      var fontLevel = typeof initAppFontLevel === 'function' ? initAppFontLevel() : 1;
+      var SPECIMEN_LIST_MODE_STORAGE_KEY = 'blood-morphology-specimen-list-mode';
+      var SPECIMEN_LIST_UI_STATE_STORAGE_KEY = 'blood-morphology-specimen-list-ui-state';
+
+      /** 初始載入預設：不選數位／實體模式；狀態全勾選以顯示完整清單（登入後進入本頁亦同） */
+      var SPECIMEN_LIST_DEMO = {
+        sortKey: 'time',
+        sortAsc: false,
+        /** 未選模式時顯示所有狀態 */
+        statusFiltersAll: ['PLT Check', 'AI Alert', 'Follow-up', 'Digital Review', 'Verified', 'Locked'],
+        demoDate: '2025-08-07'
+      };
+
+      function setDefaultDateToday() {
+        var d = SPECIMEN_LIST_DEMO.demoDate;
+        var start = document.getElementById('analysis-date-start');
+        var end = document.getElementById('analysis-date-end');
+        if (start) { start.value = d; start.dataset.initialized = '1'; }
+        if (end) { end.value = d; end.dataset.initialized = '1'; }
+      }
+
+      /** mode 為 null 時兩側模式按鈕皆不反白（未預設模式） */
+      function setModeTabVisual(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.mode-tab').forEach(function (t) {
+          t.classList.remove('bg-primary', 'text-white', 'border-primary');
+          t.classList.add('border-border-light', 'bg-surface-light', 'text-text-muted-light');
+          if (mode != null && t.dataset.mode === mode) {
+            t.classList.remove('border-border-light', 'text-text-muted-light', 'bg-surface-light');
+            t.classList.add('bg-primary', 'text-white', 'border-primary');
+          }
+        });
+      }
+
+      function persistModeSelection(mode) {
+        try {
+          if (!mode) {
+            localStorage.removeItem(SPECIMEN_LIST_MODE_STORAGE_KEY);
+            return;
+          }
+          localStorage.setItem(SPECIMEN_LIST_MODE_STORAGE_KEY, mode);
+        } catch (e) {}
+      }
+
+      function getStoredModeSelection() {
+        try {
+          var stored = localStorage.getItem(SPECIMEN_LIST_MODE_STORAGE_KEY);
+          if (stored === 'digital' || stored === 'entity') return stored;
+        } catch (e) {}
+        return null;
+      }
+
+      function getDefaultUiState() {
+        return {
+          mode: null,
+          sortKey: SPECIMEN_LIST_DEMO.sortKey,
+          sortAsc: SPECIMEN_LIST_DEMO.sortAsc,
+          statuses: SPECIMEN_LIST_DEMO.statusFiltersAll.slice(),
+          dateStart: SPECIMEN_LIST_DEMO.demoDate,
+          dateEnd: SPECIMEN_LIST_DEMO.demoDate,
+          department: '',
+          machine: '',
+          search: '',
+          exactMatch: false
+        };
+      }
+
+      function collectSpecimenListUiState() {
+        return {
+          mode: currentMode,
+          sortKey: sortKey,
+          sortAsc: !!sortAsc,
+          statuses: getSelectedStatuses(),
+          dateStart: document.getElementById('analysis-date-start').value || '',
+          dateEnd: document.getElementById('analysis-date-end').value || '',
+          department: document.getElementById('filter-department').value || '',
+          machine: document.getElementById('filter-machine').value || '',
+          search: (document.getElementById('specimen-search').value || '').trim(),
+          exactMatch: !!document.getElementById('exact-match').checked
+        };
+      }
+
+      function persistSpecimenListUiState() {
+        try {
+          localStorage.setItem(SPECIMEN_LIST_UI_STATE_STORAGE_KEY, JSON.stringify(collectSpecimenListUiState()));
+        } catch (e) {}
+      }
+
+      function getStoredSpecimenListUiState() {
+        try {
+          var raw = localStorage.getItem(SPECIMEN_LIST_UI_STATE_STORAGE_KEY);
+          if (!raw) return null;
+          var parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== 'object') return null;
+          return parsed;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function applySpecimenListUiState(state) {
+        var data = state || getDefaultUiState();
+        var mode = (data.mode === 'digital' || data.mode === 'entity') ? data.mode : null;
+        if (!mode) {
+          var storedMode = getStoredModeSelection();
+          if (storedMode) mode = storedMode;
+        }
+        currentMode = mode;
+        setModeTabVisual(mode);
+        persistModeSelection(mode);
+        sortKey = data.sortKey || SPECIMEN_LIST_DEMO.sortKey;
+        sortAsc = typeof data.sortAsc === 'boolean' ? data.sortAsc : SPECIMEN_LIST_DEMO.sortAsc;
+        var statuses = Array.isArray(data.statuses) ? data.statuses : SPECIMEN_LIST_DEMO.statusFiltersAll;
+        setStatusFilterCheckboxes(statuses);
+        var start = document.getElementById('analysis-date-start');
+        var end = document.getElementById('analysis-date-end');
+        var dep = document.getElementById('filter-department');
+        var mac = document.getElementById('filter-machine');
+        var search = document.getElementById('specimen-search');
+        var em = document.getElementById('exact-match');
+        if (start) start.value = data.dateStart || SPECIMEN_LIST_DEMO.demoDate;
+        if (end) end.value = data.dateEnd || SPECIMEN_LIST_DEMO.demoDate;
+        if (dep) dep.value = data.department || '';
+        if (mac) mac.value = data.machine || '';
+        if (search) search.value = data.search || '';
+        if (em) em.checked = !!data.exactMatch;
+      }
+
+      function applySpecimenListUiDemoDefaults() {
+        var returnMode = typeof consumeReviewReturnListMode === 'function'
+          ? consumeReviewReturnListMode()
+          : null;
+        if (returnMode === 'digital' || returnMode === 'entity') {
+          persistModeSelection(returnMode);
+        }
+        if (typeof clearReviewReturnListMode === 'function') clearReviewReturnListMode();
+
+        var savedState = getStoredSpecimenListUiState();
+        if (savedState) {
+          if (savedState.mode !== 'digital' && savedState.mode !== 'entity') {
+            var restoredMode = getStoredModeSelection();
+            if (restoredMode) {
+              savedState.mode = restoredMode;
+              savedState.statuses = (MODE_DEFAULT_STATUS[restoredMode] || []).slice();
+            }
+          }
+          if ((savedState.mode !== 'digital' && savedState.mode !== 'entity') && returnMode) {
+            savedState.mode = returnMode;
+            savedState.statuses = (MODE_DEFAULT_STATUS[returnMode] || []).slice();
+          }
+          applySpecimenListUiState(savedState);
+          return;
+        }
+        var defaultState = getDefaultUiState();
+        var restoredMode = getStoredModeSelection() || returnMode;
+        if (restoredMode) {
+          defaultState.mode = restoredMode;
+          defaultState.statuses = (MODE_DEFAULT_STATUS[restoredMode] || []).slice();
+        }
+        applySpecimenListUiState(defaultState);
+        setDefaultDateToday();
+      }
+
+      function getSelectedStatuses() {
+        var checked = [];
+        document.querySelectorAll('.status-filter:checked').forEach(function (cb) { checked.push(cb.value); });
+        return checked;
+      }
+
+      function setStatusFilterCheckboxes(keys) {
+        document.querySelectorAll('.status-filter').forEach(function (cb) {
+          cb.checked = keys.indexOf(cb.value) !== -1;
+        });
+      }
+
+      function getFilters() {
+        return {
+          dateStart: document.getElementById('analysis-date-start').value,
+          dateEnd: document.getElementById('analysis-date-end').value,
+          department: document.getElementById('filter-department').value,
+          machine: document.getElementById('filter-machine').value,
+          search: (document.getElementById('specimen-search').value || '').trim(),
+          exactMatch: document.getElementById('exact-match').checked,
+          statuses: getSelectedStatuses()
+        };
+      }
+
+      function applyFilters() {
+        var f = getFilters();
+        function statusMatchesSelection(specimen, statusKey) {
+          var st = specimen.status || [];
+          var hasTag = st.indexOf(statusKey) !== -1;
+          if (!hasTag) return false;
+          if (statusKey === 'Digital Review' && typeof isDigitalReviewDone === 'function') {
+            return !isDigitalReviewDone(specimen);
+          }
+          if (statusKey === 'AI Alert') {
+            return typeof isAiAlertConfirmed === 'function' ? !isAiAlertConfirmed(specimen) : hasTag;
+          }
+          if (typeof isEntityStatusCompleted === 'function' &&
+              (statusKey === 'PLT Check' || statusKey === 'Follow-up')) {
+            return !isEntityStatusCompleted(specimen, statusKey);
+          }
+          return true;
+        }
+        var listSource = (typeof UsabilityStudy !== 'undefined' && UsabilityStudy.filterSpecimensForList)
+          ? UsabilityStudy.filterSpecimensForList(MOCK_SPECIMENS)
+          : MOCK_SPECIMENS;
+        filteredList = listSource.filter(function (s) {
+          if (currentMode === 'digital' && typeof shouldExcludeFromDigitalSpecimenList === 'function' && shouldExcludeFromDigitalSpecimenList(s)) {
+            return false;
+          }
+          if (f.dateStart && s.analysisTime) {
+            var docDate = s.analysisTime.slice(0, 10).replace(/\//g, '-');
+            if (docDate < f.dateStart) return false;
+          }
+          if (f.dateEnd && s.analysisTime) {
+            var docDate = s.analysisTime.slice(0, 10).replace(/\//g, '-');
+            if (docDate > f.dateEnd) return false;
+          }
+          if (f.department && s.department !== f.department) return false;
+          if (f.machine && s.machine !== f.machine) return false;
+          if (f.search) {
+            var id = (s.id || '').toUpperCase();
+            var pid = (s.patientId || '').toUpperCase();
+            var search = f.search.toUpperCase();
+            if (f.exactMatch) {
+              if (id !== search && pid !== search) return false;
+            } else {
+              if (id.indexOf(search) === -1 && pid.indexOf(search) === -1) return false;
+            }
+          }
+          var selected = f.statuses || [];
+          var isVerifiedSpecimen = typeof isSpecimenWorkflowCompleted === 'function'
+            ? isSpecimenWorkflowCompleted(s)
+            : !!(s.statusDone || (s.status && s.status.indexOf('Verified') !== -1));
+          if (isVerifiedSpecimen && selected.indexOf('Verified') === -1) return false;
+          if (selected.length === 0) return true;
+          var hasStatus = selected.some(function (st) { return statusMatchesSelection(s, st); });
+          var showVerified = isVerifiedSpecimen && selected.indexOf('Verified') !== -1;
+          if (!hasStatus && !showVerified) return false;
+          return true;
+        });
+        /** 狀態欄出現打勾（Digital Review／Follow-up 完成綠勾或舊版 Verified）者排最下方 */
+        function specimenStatusShowsCheckmark(s) {
+          if (!s) return false;
+          var st = s.status || [];
+          if (typeof isDigitalReviewDone === 'function' && st.indexOf('Digital Review') >= 0 && isDigitalReviewDone(s)) return true;
+          if (typeof isEntityStatusCompleted === 'function' && st.indexOf('Follow-up') >= 0 && isEntityStatusCompleted(s, 'Follow-up')) return true;
+          if (typeof isSpecimenWorkflowCompleted === 'function' && isSpecimenWorkflowCompleted(s)) return true;
+          return st.indexOf('Verified') >= 0;
+        }
+        if (sortKey === 'id') {
+          filteredList.sort(function (a, b) {
+            if (specimenStatusShowsCheckmark(a) !== specimenStatusShowsCheckmark(b)) return specimenStatusShowsCheckmark(a) ? 1 : -1;
+            var a5 = (a.id || '').slice(-5);
+            var b5 = (b.id || '').slice(-5);
+            var cmp = a5.localeCompare(b5, undefined, { numeric: true });
+            return sortAsc ? cmp : -cmp;
+          });
+        } else if (sortKey === 'time') {
+          filteredList.sort(function (a, b) {
+            if (specimenStatusShowsCheckmark(a) !== specimenStatusShowsCheckmark(b)) return specimenStatusShowsCheckmark(a) ? 1 : -1;
+            var ta = (a.analysisTime || '').replace(/-/g, '').replace(/[:\s]/g, '');
+            var tb = (b.analysisTime || '').replace(/-/g, '').replace(/[:\s]/g, '');
+            var cmp = ta.localeCompare(tb);
+            return sortAsc ? cmp : -cmp;
+          });
+        } else if (sortKey === 'urgency') {
+          filteredList.sort(function (a, b) {
+            if (specimenStatusShowsCheckmark(a) !== specimenStatusShowsCheckmark(b)) return specimenStatusShowsCheckmark(a) ? 1 : -1;
+            var ua = typeof getSpecimenDisplayUrgency === 'function' ? Number(getSpecimenDisplayUrgency(a)) : Number(a.urgency);
+            var ub = typeof getSpecimenDisplayUrgency === 'function' ? Number(getSpecimenDisplayUrgency(b)) : Number(b.urgency);
+            if (isNaN(ua)) ua = 0;
+            if (isNaN(ub)) ub = 0;
+            var cmp = ua - ub;
+            return sortAsc ? cmp : -cmp;
+          });
+        }
+        return filteredList;
+      }
+
+      function renderStatus(specimen) {
+        var html = '';
+        var statuses = specimen.status || [];
+        statuses.forEach(function (st) {
+          if (st === 'Verified') return;
+          var style = STATUS_STYLES[st] || 'bg-gray-100 text-gray-800';
+          var drCompleted = st === 'Digital Review' && typeof isDigitalReviewDone === 'function' && isDigitalReviewDone(specimen);
+          var aiCompleted = st === 'AI Alert' && typeof isAiAlertConfirmed === 'function' && isAiAlertConfirmed(specimen);
+          var entityCompleted = st !== 'AI Alert' && typeof isEntityStatusCompleted === 'function' && isEntityStatusCompleted(specimen, st);
+          if (drCompleted || aiCompleted || entityCompleted) style = 'bg-green-100 text-green-800';
+          html += '<span class="status-capsule ' + style + '" data-status="' + st + '">';
+          if (drCompleted || aiCompleted || entityCompleted) html += '<span class="material-symbols-outlined text-xs mr-1">check</span>';
+          if (st === 'Locked') html += '<span class="material-symbols-outlined text-xs mr-1">lock</span>';
+          var displayLabel = typeof getStatusDisplayLabel === 'function' ? getStatusDisplayLabel(st) : st;
+          html += displayLabel + '</span>';
+        });
+        return html;
+      }
+
+      function rowClass(s, index) {
+        if (s.locked) return 'bg-striped';
+        if (typeof isSpecimenWorkflowCompleted === 'function' && isSpecimenWorkflowCompleted(s)) return 'bg-gray-50';
+        return index % 2 ? 'bg-gray-50' : 'bg-white';
+      }
+
+      function renderTable() {
+        applyFilters();
+        var tbody = document.getElementById('specimen-tbody');
+        tbody.innerHTML = '';
+        filteredList.forEach(function (s, i) {
+          var tr = document.createElement('tr');
+          tr.className = 'hover:bg-gray-50 ' + rowClass(s, i);
+          tr.dataset.specimenId = s.id;
+          var stList = s.status || [];
+          var drReadOnly = !s.locked && typeof isDigitalReviewReadOnly === 'function' && isDigitalReviewReadOnly(s);
+          var enterDisabled = (s.locked || drReadOnly) ? ' disabled' : '';
+          var enterText = s.locked ? '已鎖定' : '進入閱片';
+          var enterTitle = drReadOnly ? ' title="數位閱片已簽核結案"' : '';
+          var extraReadonly = drReadOnly ? '<button type="button" class="readonly-review-btn text-amber-800 text-xs font-semibold hover:underline whitespace-nowrap" data-id="' + s.id + '">唯讀檢視</button>' : '';
+          tr.innerHTML =
+            '<td class="p-2 py-4"><input type="checkbox" class="row-check rounded border-gray-300 text-primary focus:ring-primary" data-id="' + s.id + '"/></td>' +
+            '<td class="p-2 py-4"><div class="flex flex-col gap-1 items-start">' + renderStatus(s) + '</div></td>' +
+            '<td class="p-2 py-4">' + (typeof getSpecimenDisplayUrgency === 'function' ? getSpecimenDisplayUrgency(s) : (s.urgency != null ? s.urgency : '')) + '</td>' +
+            '<td class="p-2 py-4">' + s.id + '</td>' +
+            '<td class="p-2 py-4">' + s.patientId + '</td>' +
+            '<td class="p-2 py-4">' + s.name + '</td>' +
+            '<td class="p-2 py-4">' + s.department + '</td>' +
+            '<td class="p-2 py-4">' + s.machine + '</td>' +
+            '<td class="p-2 py-4">' + s.location + '</td>' +
+            '<td class="p-2 py-4">' + s.analysisTime + '</td>' +
+            '<td class="p-2 py-4">' + (s.editor || '') + '</td>' +
+            '<td class="p-2 py-4"><div class="flex flex-wrap items-center gap-2">' +
+            '<button type="button" class="text-primary text-xs hover:underline enter-review-btn' + (drReadOnly ? ' opacity-50 cursor-not-allowed' : '') + '" data-id="' + s.id + '"' + enterDisabled + enterTitle + '>' + enterText + '</button>' +
+            extraReadonly +
+            '</div></td>';
+          tbody.appendChild(tr);
+        });
+
+        tbody.querySelectorAll('tr').forEach(function (tr) {
+          tr.addEventListener('click', function (e) {
+            if (e.target.type === 'checkbox' || e.target.classList.contains('enter-review-btn')) return;
+            if (e.target.closest('.status-capsule')) return;
+            selectRow(tr.dataset.specimenId);
+          });
+          tr.addEventListener('dblclick', function (e) {
+            if (e.target.type === 'checkbox') return;
+            var id = tr.dataset.specimenId;
+            var spec = getSpecimenById(id);
+            if (!id || !spec || spec.locked) return;
+            var st = spec.status || [];
+            var drReadOnly = typeof isDigitalReviewReadOnly === 'function' && isDigitalReviewReadOnly(spec);
+            if (drReadOnly) return;
+            persistSpecimenListUiState();
+            goToImageReview(id);
+          });
+        });
+        tbody.querySelectorAll('.enter-review-btn:not([disabled])').forEach(function (btn) {
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var id = btn.dataset.id;
+            if (id) {
+              persistSpecimenListUiState();
+              goToImageReview(id);
+            }
+          });
+        });
+        tbody.querySelectorAll('.readonly-review-btn').forEach(function (btn) {
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var id = btn.dataset.id;
+            if (id && typeof goToImageReview === 'function') goToImageReview(id, { readonly: true });
+          });
+        });
+        document.getElementById('footer-status').textContent = '已篩選 ' + filteredList.length + ' 筆';
+      }
+
+      document.getElementById('specimen-tbody').addEventListener('click', function (e) {
+        var cap = e.target.closest('.status-capsule');
+        if (cap) {
+          var tr = cap.closest('tr');
+          var statusKey = cap.getAttribute('data-status');
+          var specimenId = tr ? tr.getAttribute('data-specimen-id') : '';
+          var specimen = specimenId ? getSpecimenById(specimenId) : null;
+          if (!specimen || !statusKey) return;
+          if (specimen.locked) return;
+          if (statusKey !== 'PLT Check' && statusKey !== 'Follow-up') return;
+          if (!specimen.workflowDone || typeof specimen.workflowDone !== 'object') {
+            specimen.workflowDone = { digitalReview: false, aiAlertConfirmed: false, entityReview: false, entityStatusDone: {} };
+          }
+          if (!specimen.workflowDone.entityStatusDone || typeof specimen.workflowDone.entityStatusDone !== 'object') {
+            specimen.workflowDone.entityStatusDone = {};
+          }
+          var beforeComplete = typeof isSpecimenWorkflowCompleted === 'function' ? isSpecimenWorkflowCompleted(specimen) : false;
+          var current = !!specimen.workflowDone.entityStatusDone[statusKey];
+          specimen.workflowDone.entityStatusDone[statusKey] = !current;
+          var st = specimen.status || [];
+          var entityStatuses = st.filter(function (x) {
+            return x === 'PLT Check' || x === 'Follow-up';
+          });
+          specimen.workflowDone.entityReview = entityStatuses.length > 0 && entityStatuses.every(function (x) {
+            return !!specimen.workflowDone.entityStatusDone[x];
+          });
+          specimen.statusDone = typeof isSpecimenWorkflowCompleted === 'function' ? isSpecimenWorkflowCompleted(specimen) : false;
+          var afterComplete = !!specimen.statusDone;
+          if (!afterComplete) specimen.editor = '';
+          else if (afterComplete && !beforeComplete) {
+            var editorAccount = typeof getCurrentUserAccount === 'function' ? getCurrentUserAccount() : '';
+            if (editorAccount) specimen.editor = editorAccount;
+          }
+          if (typeof persistSpecimenStatusOverride === 'function') {
+            persistSpecimenStatusOverride(specimen.id, specimen.status, { workflowDone: specimen.workflowDone, editor: specimen.editor || '' });
+          }
+          renderTable();
+          if (filteredList.length && currentSpecimenId) {
+            var stillVisible = filteredList.some(function (row) { return row.id === currentSpecimenId; });
+            if (stillVisible) selectRow(currentSpecimenId);
+            else selectRow(filteredList[0].id);
+          } else {
+            updateSidebar(null);
+          }
+          e.stopPropagation();
+        }
+      });
+
+      var ctxMenuSpecimenId = null;
+
+      function hideSpecimenRowContextMenu() {
+        var menu = document.getElementById('specimen-list-context-menu');
+        if (menu) {
+          menu.classList.add('hidden');
+          menu.style.display = '';
+          menu.style.visibility = '';
+          menu.setAttribute('aria-hidden', 'true');
+        }
+        ctxMenuSpecimenId = null;
+      }
+
+      function showSpecimenRowContextMenu(e, specimenId) {
+        var menu = document.getElementById('specimen-list-context-menu');
+        if (!menu) return;
+        ctxMenuSpecimenId = specimenId;
+        menu.classList.remove('hidden');
+        menu.style.display = 'block';
+        menu.style.visibility = 'hidden';
+        var rect = menu.getBoundingClientRect();
+        var pad = 8;
+        var x = e.clientX;
+        var y = e.clientY;
+        var mw = window.innerWidth;
+        var mh = window.innerHeight;
+        var maxX = Math.max(pad, mw - rect.width - pad);
+        var maxY = Math.max(pad, mh - rect.height - pad);
+        if (x > maxX) x = maxX;
+        if (y > maxY) y = maxY;
+        if (x < pad) x = pad;
+        if (y < pad) y = pad;
+        menu.style.left = x + 'px';
+        menu.style.top = y + 'px';
+        menu.style.visibility = 'visible';
+        menu.setAttribute('aria-hidden', 'false');
+      }
+
+      var specimenTbodyEl = document.getElementById('specimen-tbody');
+      if (specimenTbodyEl) {
+        specimenTbodyEl.addEventListener('contextmenu', function (e) {
+          var tr = e.target.closest('tr');
+          if (!tr || !tr.dataset.specimenId) return;
+          if (e.target.closest('input, button')) return;
+          var spec = typeof getSpecimenById === 'function' ? getSpecimenById(tr.dataset.specimenId) : null;
+          if (!spec || spec.locked) return;
+          var st = spec.status || [];
+          var drDone = st.indexOf('Digital Review') >= 0 && typeof isDigitalReviewDone === 'function' && isDigitalReviewDone(spec);
+          if (!drDone) return;
+          e.preventDefault();
+          showSpecimenRowContextMenu(e, tr.dataset.specimenId);
+        });
+      }
+
+      document.addEventListener('click', function (e) {
+        if (e.target.closest && e.target.closest('#specimen-list-context-menu')) return;
+        hideSpecimenRowContextMenu();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') hideSpecimenRowContextMenu();
+      });
+
+      var btnCtxReopenDr = document.getElementById('specimen-ctx-reopen-dr');
+      if (btnCtxReopenDr) {
+        btnCtxReopenDr.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var id = ctxMenuSpecimenId;
+          hideSpecimenRowContextMenu();
+          if (!id) return;
+          if (!window.confirm('確定要將此檢體退回 Digital Review？之後可再次進入編輯。')) return;
+          if (typeof reopenDigitalReview === 'function' && reopenDigitalReview(id)) {
+            if (typeof applySpecimenStatusOverridesFromStorage === 'function') applySpecimenStatusOverridesFromStorage();
+            renderTable();
+            if (filteredList.some(function (r) { return r.id === id; })) selectRow(id);
+            else if (filteredList.length) selectRow(filteredList[0].id);
+            var fs = document.getElementById('footer-status');
+            if (fs) fs.textContent = '已退回數位閱片：' + id;
+          }
+        });
+      }
+
+      function updateSortUI() {
+        document.querySelectorAll('th.sortable').forEach(function (th) {
+          th.classList.remove('sort-asc', 'sort-desc');
+          var iconAsc = th.querySelector('.sort-icon-asc');
+          var iconDesc = th.querySelector('.sort-icon-desc');
+          if (iconAsc) iconAsc.classList.add('hidden');
+          if (iconDesc) iconDesc.classList.add('hidden');
+          if (th.dataset.sort === sortKey) {
+            th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+            if (iconAsc) iconAsc.classList.toggle('hidden', !sortAsc);
+            if (iconDesc) iconDesc.classList.toggle('hidden', sortAsc);
+          }
+        });
+      }
+
+      function selectRow(id) {
+        currentSpecimenId = id;
+        document.querySelectorAll('#specimen-tbody tr').forEach(function (tr) {
+          tr.classList.remove('tr-selected');
+          if (tr.dataset.specimenId === id) tr.classList.add('tr-selected');
+        });
+        updateSidebar(id);
+      }
+
+      function updateSidebar(id) {
+        var spec = getSpecimenById(id);
+        document.getElementById('sidebar-specimen-id').textContent = id || '-';
+        var prevHeader = document.getElementById('sidebar-prev-report-header');
+        if (prevHeader && typeof getPrevReportHeaderLabel === 'function') {
+          prevHeader.textContent = getPrevReportHeaderLabel(spec, '前次報告');
+        }
+        if (!spec) {
+          document.getElementById('sidebar-placeholder').classList.remove('hidden');
+          document.getElementById('sidebar-content').classList.add('hidden');
+          return;
+        }
+        document.getElementById('sidebar-placeholder').classList.add('hidden');
+        document.getElementById('sidebar-content').classList.remove('hidden');
+
+        var info = [
+          ['病歷號', spec.patientId],
+          ['姓名', spec.name + ' (' + (spec.gender || '') + ')'],
+          ['生日', (spec.birthDate || '') + ' (' + (spec.age != null ? spec.age + '歲' : '') + ')'],
+          ['檢體來源', spec.department]
+        ];
+        document.getElementById('sidebar-info').innerHTML = info.map(function (p) {
+          return '<div><span class="text-text-muted-light">' + p[0] + ':</span><span class="text-text-light font-medium ml-1">' + (p[1] || '-') + '</span></div>';
+        }).join('');
+
+        var m = spec.metrics || {};
+        var prev = spec.prevReport || {};
+        var f = spec.flowCyt || {};
+        // 流式計數欄用 flowCyt：成熟細胞有值，未成熟/異常血球一律為 '-'
+        var rows = [
+          ['WBC (10e9/L)', m.wbc, m.wbc, prev.wbc],
+          ['PLT (10e9/L)', m.plt, m.plt, prev.plt],
+          ['Band (%)', f.band !== undefined ? f.band : '-', m.band, prev.band],
+          ['Segmented neutrophil (%)', f.segmentedNeutrophil !== undefined ? f.segmentedNeutrophil : '-', m.segmentedNeutrophil, prev.segmentedNeutrophil],
+          ['Eosinophil (%)', f.eosinophil !== undefined ? f.eosinophil : '-', m.eosinophil, prev.eosinophil],
+          ['Monocyte (%)', f.monocyte !== undefined ? f.monocyte : '-', m.monocyte, prev.monocyte],
+          ['Basophil (%)', f.basophil !== undefined ? f.basophil : '-', m.basophil, prev.basophil],
+          ['Lymphocyte (%)', f.lymphocyte !== undefined ? f.lymphocyte : '-', m.lymphocyte, prev.lymphocyte],
+          ['Atypical lymphocyte (%)', f.atypicalLymphocyte !== undefined ? f.atypicalLymphocyte : '-', m.atypicalLymphocyte, prev.atypicalLymphocyte],
+          ['Blast (%)', f.blast !== undefined ? f.blast : '-', m.blast, prev.blast],
+          ['Promyelocyte (%)', f.promyelocyte !== undefined ? f.promyelocyte : '-', m.promyelocyte, prev.promyelocyte],
+          ['Myelocyte (%)', f.myelocyte !== undefined ? f.myelocyte : '-', m.myelocyte, prev.myelocyte],
+          ['Metamyelocyte (%)', f.metamyelocyte !== undefined ? f.metamyelocyte : '-', m.metamyelocyte, prev.metamyelocyte],
+          ['Hypersegmented (%)', f.hypersegmented !== undefined ? f.hypersegmented : '-', m.hypersegmented, prev.hypersegmented],
+          ['Promonocyte (%)', f.promonocyte !== undefined ? f.promonocyte : '-', m.promonocyte, prev.promonocyte],
+          ['Plasma cell (%)', f.plasmaCell !== undefined ? f.plasmaCell : '-', m.plasmaCell, prev.plasmaCell],
+          ['Abnormal lymphocyte (%)', f.abnormalLymphocyte !== undefined ? f.abnormalLymphocyte : '-', m.abnormalLymphocyte, prev.abnormalLymphocyte]
+        ];
+        function shouldHighlightMetric(label, valueStr) {
+          var v = parseFloat(valueStr);
+          if (isNaN(v)) v = 0;
+          switch (label) {
+            case 'WBC (10e9/L)':
+              return v >= 30; // WBC Count ≧30,000/μl
+            case 'Lymphocyte (%)':
+              return v >= 60; // 成人≧60%
+            case 'Monocyte (%)':
+              return v >= 20;
+            case 'Eosinophil (%)':
+              return v >= 20;
+            case 'Basophil (%)':
+              return v >= 5;
+            case 'Atypical lymphocyte (%)':
+              return v >= 10;
+            case 'Blast (%)':
+              return valueStr && valueStr !== '-' && parseFloat(valueStr) > 0; // Present
+            case 'Promyelocyte (%)':
+              return valueStr && valueStr !== '-' && parseFloat(valueStr) > 0; // Present
+            case 'Myelocyte (%)':
+              return v >= 5;
+            case 'Metamyelocyte (%)':
+              return v >= 10;
+            case 'Promonocyte (%)':
+              return valueStr && valueStr !== '-' && parseFloat(valueStr) > 0; // Present
+            case 'Plasma cell (%)':
+              return valueStr && valueStr !== '-' && parseFloat(valueStr) > 0; // Present
+            case 'Abnormal lymphocyte (%)':
+              return valueStr && valueStr !== '-' && parseFloat(valueStr) > 0; // Present / Suspect
+            default:
+              return false;
+          }
+        }
+
+        document.getElementById('sidebar-metrics').innerHTML = rows.map(function (r) {
+          var label = r[0];
+          var aiValue = r[2];
+          var prevValue = r[3];
+          var highlight = shouldHighlightMetric(label, aiValue) || shouldHighlightMetric(label, prevValue);
+          var rowClass = highlight ? 'bg-danger-light/30' : '';
+          var cellClass = highlight ? 'font-bold text-danger-text-light' : '';
+          return '<tr class="' + rowClass + '"><td class="p-2 font-semibold text-text-muted-light">' + label + '</td><td class="p-2">' + (r[1] || '-') + '</td><td class="p-2 ' + cellClass + '">' + (aiValue || '-') + '</td><td class="p-2 ' + cellClass + '">' + (prevValue || '-') + '</td></tr>';
+        }).join('');
+      }
+
+      document.getElementById('btn-filter').addEventListener('click', function () {
+        var panel = document.getElementById('filter-panel');
+        var open = !panel.classList.contains('hidden');
+        panel.classList.toggle('hidden', open);
+        this.setAttribute('aria-expanded', !open);
+      });
+
+      document.querySelectorAll('.status-filter').forEach(function (cb) {
+        cb.addEventListener('change', function () {
+          renderTable();
+          persistSpecimenListUiState();
+        });
+      });
+
+      document.querySelectorAll('.mode-tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          var mode = this.dataset.mode;
+          var isSameMode = currentMode === mode;
+          if (isSameMode) {
+            setModeTabVisual(null);
+            persistModeSelection(null);
+            setStatusFilterCheckboxes(SPECIMEN_LIST_DEMO.statusFiltersAll);
+          } else {
+            setModeTabVisual(mode);
+            persistModeSelection(mode);
+            var defaults = MODE_DEFAULT_STATUS[mode === 'digital' ? 'digital' : 'entity'];
+            setStatusFilterCheckboxes(defaults);
+          }
+          renderTable();
+          persistSpecimenListUiState();
+          if (filteredList.length) selectRow(filteredList[0].id);
+        });
+      });
+
+      document.querySelectorAll('th.sortable').forEach(function (th) {
+        th.addEventListener('click', function () {
+          var key = this.dataset.sort;
+          if (sortKey === key) sortAsc = !sortAsc;
+          else { sortKey = key; sortAsc = true; }
+          updateSortUI();
+          renderTable();
+          persistSpecimenListUiState();
+          if (filteredList.length && currentSpecimenId) selectRow(currentSpecimenId);
+        });
+      });
+
+      document.getElementById('btn-search').addEventListener('click', function () {
+        renderTable();
+        persistSpecimenListUiState();
+      });
+      document.getElementById('specimen-search').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') document.getElementById('btn-search').click();
+      });
+      document.getElementById('specimen-search').addEventListener('input', persistSpecimenListUiState);
+      document.getElementById('analysis-date-start').addEventListener('change', function () {
+        renderTable();
+        persistSpecimenListUiState();
+      });
+      document.getElementById('analysis-date-end').addEventListener('change', function () {
+        renderTable();
+        persistSpecimenListUiState();
+      });
+      document.getElementById('exact-match').addEventListener('change', function () {
+        renderTable();
+        persistSpecimenListUiState();
+      });
+      document.getElementById('filter-department').addEventListener('change', function () {
+        renderTable();
+        persistSpecimenListUiState();
+      });
+      document.getElementById('filter-machine').addEventListener('change', function () {
+        renderTable();
+        persistSpecimenListUiState();
+      });
+
+      document.getElementById('font-smaller').addEventListener('click', function () {
+        if (typeof adjustAppFontLevel === 'function') fontLevel = adjustAppFontLevel(-1);
+      });
+      document.getElementById('font-larger').addEventListener('click', function () {
+        if (typeof adjustAppFontLevel === 'function') fontLevel = adjustAppFontLevel(1);
+      });
+
+      var LEAVE_KEY_ORDER = ['wbc', 'lymphocyte', 'monocyte', 'eosinophil', 'basophil', 'atypicalLymphocyte', 'blast', 'promyelocyte', 'myelocyte', 'metamyelocyte', 'hypersegmented', 'promonocyte', 'plasmaCell', 'abnormalLymphocyte'];
+
+      function buildLeaveSettingsForm() {
+        var body = document.getElementById('modal-leave-settings-body');
+        if (!body || typeof LEAVE_THRESHOLDS === 'undefined' || typeof DEFAULT_LEAVE_THRESHOLDS === 'undefined') return;
+        var labels = typeof LEAVE_THRESHOLD_LABELS !== 'undefined' ? LEAVE_THRESHOLD_LABELS : {};
+        var html = LEAVE_KEY_ORDER.map(function (k) {
+          var def = DEFAULT_LEAVE_THRESHOLDS[k];
+          var lab = labels[k] || k;
+          if (def === 'present') {
+            return '<div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-x-3 gap-y-1 py-2.5 border-b border-gray-100 items-start sm:items-center">' +
+              '<div><span class="font-medium text-text-light text-sm">' + lab + '</span><p class="text-[11px] text-text-muted-light mt-0.5">有數值（&gt;0）即視為達留單標準（Present）</p></div>' +
+              '<span class="text-xs font-medium text-text-muted-light shrink-0 sm:text-right">Present</span></div>';
+          }
+          var v = LEAVE_THRESHOLDS[k];
+          return '<div class="grid grid-cols-1 sm:grid-cols-[1fr_minmax(0,7rem)] gap-x-3 gap-y-1 py-2.5 border-b border-gray-100 items-center">' +
+            '<label class="font-medium text-text-light text-sm" for="leave-inp-' + k + '">' + lab + '</label>' +
+            '<input id="leave-inp-' + k + '" type="number" min="0" step="0.1" data-key="' + k + '" class="w-full px-2 py-1.5 text-sm border border-border-light rounded-md focus:ring-primary focus:border-primary" value="' + String(v) + '"/></div>';
+        });
+        body.innerHTML = html.join('');
+      }
+
+      function applyUsabilityScenarioUiDefaults() {
+        setModeTabVisual(null);
+        persistModeSelection(null);
+        setStatusFilterCheckboxes(SPECIMEN_LIST_DEMO.statusFiltersAll.slice());
+        var start = document.getElementById('analysis-date-start');
+        var end = document.getElementById('analysis-date-end');
+        var dep = document.getElementById('filter-department');
+        var mac = document.getElementById('filter-machine');
+        var search = document.getElementById('specimen-search');
+        var em = document.getElementById('exact-match');
+        if (start) start.value = SPECIMEN_LIST_DEMO.demoDate;
+        if (end) end.value = SPECIMEN_LIST_DEMO.demoDate;
+        if (dep) dep.value = '';
+        if (mac) mac.value = '';
+        if (search) search.value = '';
+        if (em) em.checked = false;
+      }
+
+      function updateFooterScenarioStatus() {
+        var fs = document.getElementById('footer-status');
+        if (!fs) return;
+        var scenario = (typeof UsabilityStudy !== 'undefined') ? UsabilityStudy.getActiveScenario() : null;
+        if (scenario && scenario.id) {
+          fs.textContent = '情境模擬測試：' + scenario.title;
+        }
+      }
+
+      function buildScenarioSimulationForm(previewId) {
+        var body = document.getElementById('modal-scenario-simulation-body');
+        if (!body || typeof UsabilityStudy === 'undefined') return;
+        var selectedId = (previewId !== undefined && previewId !== null)
+          ? previewId
+          : UsabilityStudy.getActiveScenarioId();
+        body.innerHTML = UsabilityStudy.buildSettingsPanelHtml(selectedId);
+        body.querySelectorAll('input[name="usability-scenario"]').forEach(function (radio) {
+          radio.addEventListener('change', function () {
+            buildScenarioSimulationForm(UsabilityStudy.getSelectedScenarioIdFromPanel());
+          });
+        });
+      }
+
+      function applyScenarioSimulation() {
+        if (typeof UsabilityStudy === 'undefined') return;
+        var nextId = UsabilityStudy.getSelectedScenarioIdFromPanel();
+        var legacyWas = typeof UsabilityStudy.isLegacyUiEnabled === 'function' ? UsabilityStudy.isLegacyUiEnabled() : false;
+        UsabilityStudy.applyScenario(nextId);
+        var legacyNow = typeof UsabilityStudy.applyLegacyUiFromPanel === 'function' ? UsabilityStudy.applyLegacyUiFromPanel() : false;
+        if (legacyNow && (legacyNow !== legacyWas || !LegacyUi.isOnLegacyPage())) {
+          window.location.href = (typeof LegacyUi !== 'undefined') ? LegacyUi.resolvePageUrl('specimenList') : 'legacy/檢體管理.html';
+          return;
+        }
+        if (!legacyNow && typeof LegacyUi !== 'undefined' && LegacyUi.isOnLegacyPage && LegacyUi.isOnLegacyPage()) {
+          window.location.href = LegacyUi.resolvePageUrl('specimenList');
+          return;
+        }
+        if (nextId) applyUsabilityScenarioUiDefaults();
+        currentSpecimenId = null;
+        var placeholder = document.getElementById('sidebar-placeholder');
+        var content = document.getElementById('sidebar-content');
+        if (placeholder) placeholder.classList.remove('hidden');
+        if (content) content.classList.add('hidden');
+        renderTable();
+        persistSpecimenListUiState();
+        updateFooterScenarioStatus();
+        var fs = document.getElementById('footer-status');
+        if (fs) {
+          var sc = UsabilityStudy.getActiveScenario();
+          fs.textContent = sc && sc.id ? ('已套用：' + sc.title) : '已還原正式清單';
+        }
+      }
+
+      function openLeaveSettingsModal() {
+        buildLeaveSettingsForm();
+        var m = document.getElementById('modal-leave-settings');
+        if (m) m.classList.remove('hidden');
+      }
+      function closeLeaveSettingsModal() {
+        var m = document.getElementById('modal-leave-settings');
+        if (m) m.classList.add('hidden');
+      }
+
+      function openScenarioSimulationModal() {
+        buildScenarioSimulationForm();
+        var m = document.getElementById('modal-scenario-simulation');
+        if (m) m.classList.remove('hidden');
+      }
+      function closeScenarioSimulationModal() {
+        var m = document.getElementById('modal-scenario-simulation');
+        if (m) m.classList.add('hidden');
+      }
+
+      var btnSettings = document.getElementById('btn-settings');
+      if (btnSettings) btnSettings.addEventListener('click', openLeaveSettingsModal);
+      var btnScenarioSimulation = document.getElementById('btn-scenario-simulation');
+      if (btnScenarioSimulation) btnScenarioSimulation.addEventListener('click', openScenarioSimulationModal);
+      var mClose = document.getElementById('modal-leave-settings-close');
+      var mBack = document.getElementById('modal-leave-settings-backdrop');
+      var mCancel = document.getElementById('modal-leave-settings-cancel');
+      if (mClose) mClose.addEventListener('click', closeLeaveSettingsModal);
+      if (mBack) mBack.addEventListener('click', closeLeaveSettingsModal);
+      if (mCancel) mCancel.addEventListener('click', closeLeaveSettingsModal);
+      var scClose = document.getElementById('modal-scenario-simulation-close');
+      var scBack = document.getElementById('modal-scenario-simulation-backdrop');
+      var scCancel = document.getElementById('modal-scenario-simulation-cancel');
+      if (scClose) scClose.addEventListener('click', closeScenarioSimulationModal);
+      if (scBack) scBack.addEventListener('click', closeScenarioSimulationModal);
+      if (scCancel) scCancel.addEventListener('click', closeScenarioSimulationModal);
+      var mReset = document.getElementById('modal-leave-settings-reset');
+      if (mReset) mReset.addEventListener('click', function () {
+        if (typeof resetLeaveThresholdsToDefaults === 'function') resetLeaveThresholdsToDefaults();
+        buildLeaveSettingsForm();
+      });
+      var mSave = document.getElementById('modal-leave-settings-save');
+      if (mSave) mSave.addEventListener('click', function () {
+        if (typeof LEAVE_THRESHOLDS === 'undefined' || typeof DEFAULT_LEAVE_THRESHOLDS === 'undefined') return;
+        LEAVE_KEY_ORDER.forEach(function (k) {
+          if (DEFAULT_LEAVE_THRESHOLDS[k] === 'present') {
+            LEAVE_THRESHOLDS[k] = 'present';
+            return;
+          }
+          var inp = document.querySelector('#modal-leave-settings input[data-key="' + k + '"]');
+          if (!inp) return;
+          var n = parseFloat(String(inp.value).replace(',', '.'), 10);
+          if (isNaN(n) || n < 0) n = DEFAULT_LEAVE_THRESHOLDS[k];
+          LEAVE_THRESHOLDS[k] = n;
+        });
+        if (typeof persistLeaveThresholdsToStorage === 'function') persistLeaveThresholdsToStorage();
+        closeLeaveSettingsModal();
+        var fs = document.getElementById('footer-status');
+        if (fs) fs.textContent = '留單標準已儲存';
+      });
+      var scApply = document.getElementById('modal-scenario-simulation-apply');
+      if (scApply) scApply.addEventListener('click', function () {
+        applyScenarioSimulation();
+        closeScenarioSimulationModal();
+      });
+
+      if (typeof APP_DATABASE !== 'undefined') {
+        var depSel = document.getElementById('filter-department');
+        if (APP_DATABASE.departments && depSel) APP_DATABASE.departments.forEach(function (d) { var o = document.createElement('option'); o.value = d; o.textContent = d; depSel.appendChild(o); });
+        var macSel = document.getElementById('filter-machine');
+        if (APP_DATABASE.machines && macSel) APP_DATABASE.machines.forEach(function (m) { var o = document.createElement('option'); o.value = m; o.textContent = m; macSel.appendChild(o); });
+      }
+      try {
+        sessionStorage.removeItem('blood-morphology-specimen-ui-reset');
+      } catch (err) {}
+      applySpecimenListUiDemoDefaults();
+      updateSortUI();
+      renderTable();
+      persistSpecimenListUiState();
+      updateFooterScenarioStatus();
+
+      var manualAlertToast = typeof consumeManualAlertToastQueue === 'function' ? consumeManualAlertToastQueue() : null;
+      var manualAlertToastId = manualAlertToast && manualAlertToast.specimenId ? manualAlertToast.specimenId : null;
+      if (manualAlertToastId) {
+        var toastEl = document.getElementById('specimen-list-toast');
+        var toastText = document.getElementById('specimen-list-toast-text');
+        if (toastEl && toastText) {
+          toastText.textContent = manualAlertToast.addedFollowUp
+            ? manualAlertToastId + ' 已歸入需拉片確認，等待人工鏡檢'
+            : manualAlertToastId + ' 已確認 AI分類警示';
+          toastEl.classList.remove('hidden');
+          setTimeout(function () { toastEl.classList.add('hidden'); }, 6000);
+        }
+      }
+      var followUpDoneToast = typeof consumeFollowUpDoneToastQueue === 'function' ? consumeFollowUpDoneToastQueue() : null;
+      var followUpDoneToastId = followUpDoneToast && followUpDoneToast.specimenId ? followUpDoneToast.specimenId : null;
+      if (followUpDoneToastId) {
+        var toastEl2 = document.getElementById('specimen-list-toast');
+        var toastText2 = document.getElementById('specimen-list-toast-text');
+        if (toastEl2 && toastText2) {
+          toastText2.textContent = followUpDoneToast.workflowCompleted
+            ? followUpDoneToastId + ' 已標記拉片完成，檢體流程已完成'
+            : followUpDoneToastId + ' 已標記拉片完成，尚有其他待辦';
+          toastEl2.classList.remove('hidden');
+          setTimeout(function () { toastEl2.classList.add('hidden'); }, 6000);
+        }
+        if (filteredList.some(function (r) { return r.id === followUpDoneToastId; })) {
+          selectRow(followUpDoneToastId);
+        }
+      }
+      var reportVerifiedToast = typeof consumeReportVerifiedToastQueue === 'function' ? consumeReportVerifiedToastQueue() : null;
+      var reportVerifiedToastId = reportVerifiedToast && reportVerifiedToast.specimenId ? reportVerifiedToast.specimenId : null;
+      if (reportVerifiedToastId) {
+        var toastEl3 = document.getElementById('specimen-list-toast');
+        var toastText3 = document.getElementById('specimen-list-toast-text');
+        if (toastEl3 && toastText3) {
+          toastText3.textContent = reportVerifiedToast.workflowCompleted
+            ? reportVerifiedToastId + ' 簽核完成，檢體流程已完成'
+            : reportVerifiedToastId + ' 簽核完成，尚有其他待辦';
+          toastEl3.classList.remove('hidden');
+          setTimeout(function () { toastEl3.classList.add('hidden'); }, 6000);
+        }
+        if (filteredList.some(function (r) { return r.id === reportVerifiedToastId; })) {
+          selectRow(reportVerifiedToastId);
+        }
+      }
+      if (manualAlertToastId && filteredList.some(function (r) { return r.id === manualAlertToastId; })) {
+        selectRow(manualAlertToastId);
+      } else if (filteredList.length) {
+        selectRow(filteredList[0].id);
+      }
+
+      if (window.Tutorial) {
+        Tutorial.runOnSpecimenPage();
+        var btnTutorial = document.getElementById('btn-tutorial');
+        if (btnTutorial) btnTutorial.addEventListener('click', function () { Tutorial.startSpecimen(true); });
+      }
+
+      // 其他分頁／視窗變更 flag 後，同步合併至記憶體並重繪列表
+      window.addEventListener('storage', function (e) {
+        if (e.key !== 'blood-morphology-specimen-status') return;
+        if (typeof applySpecimenStatusOverridesFromStorage === 'function') {
+          applySpecimenStatusOverridesFromStorage();
+        }
+        updateSortUI();
+        renderTable();
+        if (filteredList.length && currentSpecimenId) selectRow(currentSpecimenId);
+      });
+    })();
+  </script>
+</body>
+</html>

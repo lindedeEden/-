@@ -1,0 +1,27 @@
+ 附件一 : 林口長庚醫院留單標準
+各家醫療院所採用標準不同，此為林口長庚醫院檢驗科與血液科共同討論並訂定之版本
+分類 	檢驗項目	留片標準 	備註與例外處理原則 
+白血球計數	WBC Count	≧30,000/μl	若病人於兩週內已留過片，則不需再留片。
+白血球分類 	Lymphocyte	成人≧60%
+兒童≧80%	
+	Monocyte	≧20%	腫瘤科與婦癌科病人，僅在 Monocyte≧20% 時才需留片（除非符合其他留片標準）。
+	Eosinophil	≧20%	
+	Basophil	≧5%	
+	A-Lym	≧10%	
+未成熟/
+異常細胞 	Blast	Present 	強制留片： 即便 Pancytopenia 病人兩週內已留過，若為了確認殘餘癌細胞，仍需掃全片確認是否有 Blast。
+	Promyelocyte	Present 	
+	Myelocyte	≧5%	
+	Metamyelocyte	≧10%	
+	Abn Lym / Abn Mono	Present or Suspect	包含 Abnormal Mononuclear cells
+紅血球/
+血小板 	NRBC	嬰兒 (<6個月)：Present 
+
+成人：Present	成人需為「第一次出現」且 Hb 正常或偏高者才需留片。
+	PLT Morphology	Megakaryocyte fragment	
+	Blood Parasite	Present or Suspect	
+特定科別/病況規則	血液科/兒血科病人	10個月內未出現相同異常	規則： 若 10個月內 出現相同異常，不需留片；反之則需留片。
+	Pancytopenia	WBC < 1,000 /μl	規則： 不論科別，兩週內有相同原因留過片，不需再留片 (需排除 Blast 確認需求)。
+	特殊案例	無法分類之血球 / 新 Leukemia	規則： 無論是否移單或發出報告，皆須留片。
+	重覆留片原則	曾留過片之病人	規則： 只要本次符合的留片標準跟上次不一樣，皆需留片。
+

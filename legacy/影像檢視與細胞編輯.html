@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CellaVision - Remote Review Software - 影像檢視</title>
+  <link rel="stylesheet" href="../assets/css/legacy.css?v=20260712q"/>
+  <link rel="stylesheet" href="../assets/css/legacy-image-review.css?v=20260712w"/>
+  <link rel="stylesheet" href="../assets/css/legacy-signoff.css?v=20260712z3"/>
+  <link rel="stylesheet" href="../assets/css/legacy-lis.css?v=20260712u"/>
+</head>
+<body class="legacy-ui">
+  <div class="legacy-review-app">
+    <div class="legacy-titlebar">CellaVision - Remote Review Software - 週邊血液 和 體液</div>
+    <nav class="legacy-menubar">
+      <a href="#">檔案(F)</a>
+      <a href="#">編輯(E)</a>
+      <a href="#">檢視(V)</a>
+      <a href="#">工具(T)</a>
+      <a href="#">說明(H)</a>
+      <button type="button" class="legacy-menu-btn" id="legacy-btn-lis">LIS 查詢</button>
+      <button type="button" class="legacy-menu-btn" id="legacy-btn-scenario">情境模擬測試</button>
+      <button type="button" class="legacy-menu-btn" id="legacy-btn-modern-ui">切換改善版介面</button>
+    </nav>
+    <div class="legacy-toolbar-block">
+      <div class="legacy-toolbar legacy-review-toolbar">
+        <div class="legacy-toolbar-group">
+          <button type="button" class="legacy-tb-btn legacy-tb-btn-folder" id="legacy-tb-back-list" title="返回檢體管理"><span class="legacy-tb-icon legacy-tb-icon-folder" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn legacy-tb-btn-folder" title="搜尋"><span class="legacy-tb-icon legacy-tb-icon-folder2" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn" title="文件"><span class="legacy-tb-icon legacy-tb-icon-doc" aria-hidden="true"></span></button>
+        </div>
+        <div class="legacy-toolbar-field-stack">
+          <span class="legacy-toolbar-label">檢體單 ID:</span>
+          <span class="legacy-toolbar-field legacy-toolbar-specimen-id" id="legacy-toolbar-specimen-id">&nbsp;</span>
+        </div>
+        <div class="legacy-toolbar-field-stack">
+          <span class="legacy-toolbar-label">序號:</span>
+          <span class="legacy-toolbar-field legacy-toolbar-field-short" id="legacy-toolbar-slide-no">1</span>
+        </div>
+        <div class="legacy-toolbar-group">
+          <button type="button" class="legacy-tb-btn legacy-tb-btn-folder" title="資料夾"><span class="legacy-tb-icon legacy-tb-icon-folder" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn" title="患者"><span class="legacy-tb-icon legacy-tb-icon-user" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn legacy-tb-btn-f" title="列印"><span class="legacy-tb-glyph legacy-tb-glyph-f">P</span></button>
+        </div>
+        <span class="legacy-toolbar-sep" aria-hidden="true"></span>
+        <div class="legacy-toolbar-group">
+          <button type="button" class="legacy-tb-btn" title="玻片"><span class="legacy-tb-icon legacy-tb-icon-slide" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn" title="螢幕檢視"><span class="legacy-tb-icon legacy-tb-icon-monitor" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn" title="格線檢視"><span class="legacy-tb-icon legacy-tb-icon-grid" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn" title="分割檢視"><span class="legacy-tb-icon legacy-tb-icon-split" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn" title="四分割"><span class="legacy-tb-icon legacy-tb-icon-quad" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn" title="放大"><span class="legacy-tb-icon legacy-tb-icon-zoom-in" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn" title="縮小"><span class="legacy-tb-icon legacy-tb-icon-zoom-out" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn" title="色彩"><span class="legacy-tb-icon legacy-tb-icon-color" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn" title="旋轉"><span class="legacy-tb-icon legacy-tb-icon-rotate" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn" title="細胞"><span class="legacy-tb-icon legacy-tb-icon-cell" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn" title="歷程"><span class="legacy-tb-icon legacy-tb-icon-clock" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn" title="備註"><span class="legacy-tb-icon legacy-tb-icon-edit" aria-hidden="true"></span></button>
+          <button type="button" class="legacy-tb-btn" title="儲存" id="legacy-tb-save"><span class="legacy-tb-icon legacy-tb-icon-save" aria-hidden="true"></span></button>
+        </div>
+      </div>
+    </div>
+    <div id="legacy-scenario-banner" class="legacy-scenario-banner hidden"></div>
+    <div class="legacy-review-main">
+      <aside class="legacy-review-sidebar">
+        <div class="legacy-worklist">
+          <div class="legacy-panel-title">工作清單</div>
+          <div class="legacy-worklist-table-wrap">
+            <table>
+              <thead><tr><th>檢驗單 ID</th></tr></thead>
+              <tbody id="legacy-review-worklist-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="legacy-worklist-actions">
+          <button type="button" class="legacy-btn" id="legacy-btn-open-worklist">開啟</button>
+          <button type="button" class="legacy-btn" id="legacy-btn-del-worklist">移除</button>
+        </div>
+        <div class="legacy-review-info">
+          <div id="legacy-review-patient-info" class="legacy-patient-block">載入中…</div>
+        </div>
+      </aside>
+      <div class="legacy-review-center">
+        <div class="legacy-review-tabs" role="tablist">
+          <button type="button" class="legacy-review-tab active" data-tab="wbc" role="tab" aria-selected="true">白血球</button>
+          <button type="button" class="legacy-review-tab legacy-review-tab-icon" disabled title="圖表" aria-hidden="true"><span class="legacy-review-tab-chart"></span></button>
+          <button type="button" class="legacy-review-tab" data-tab="slide" role="tab" aria-selected="false">簽核玻片</button>
+        </div>
+        <div class="legacy-review-panel legacy-review-panel-wbc" id="legacy-review-panel-wbc">
+          <div class="legacy-review-grid-scroll">
+            <div class="legacy-cell-areas" id="legacy-review-cell-areas"></div>
+          </div>
+        </div>
+        <div class="legacy-review-panel legacy-review-panel-slide hidden" id="legacy-review-panel-slide">
+          <div class="legacy-signoff-view" id="legacy-signoff-view"></div>
+        </div>
+      </div>
+    </div>
+    <footer class="legacy-statusbar">
+      <span id="legacy-review-footer-status">Ready</span>
+      <span>2228 CGDIA | CAP NUM</span>
+    </footer>
+  </div>
+
+  <div id="legacy-ctx-menu" class="legacy-ctx-menu" role="menu"></div>
+
+  <div id="legacy-signoff-dialog-backdrop" class="legacy-signoff-dialog-backdrop" aria-modal="true" role="dialog">
+    <div class="legacy-signoff-dialog">
+      <div class="legacy-signoff-dialog-titlebar">
+        <span class="legacy-signoff-dialog-icon" aria-hidden="true"></span>
+        <span>簽核玻片</span>
+      </div>
+        <div class="legacy-signoff-dialog-body">
+        <div class="legacy-signoff-dialog-meta">
+          <div>資料庫: CGDIA</div>
+          <div>類型: 正在處理</div>
+        </div>
+        <div class="legacy-signoff-dialog-field">
+          <label for="legacy-signoff-username">使用者名稱:</label>
+          <input type="text" id="legacy-signoff-username" autocomplete="username"/>
+        </div>
+        <div class="legacy-signoff-dialog-field">
+          <label for="legacy-signoff-password">密碼:</label>
+          <input type="password" id="legacy-signoff-password" autocomplete="current-password" value="12345678"/>
+        </div>
+        <div class="legacy-signoff-dialog-options">
+          <label><input type="checkbox" id="legacy-signoff-sign-requisition" checked/> 在簽核玻片時簽核檢驗單</label>
+          <label><input type="checkbox" id="legacy-signoff-send-lis" checked/> 傳送至 LIS</label>
+          <label><input type="checkbox" id="legacy-signoff-print"/> 列印檢驗單</label>
+        </div>
+      </div>
+      <div class="legacy-signoff-dialog-footer">
+        <button type="button" class="legacy-btn legacy-btn-primary" id="legacy-signoff-ok">確定</button>
+        <button type="button" class="legacy-btn" id="legacy-signoff-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="legacy-modal-scenario" class="legacy-modal-backdrop hidden" aria-modal="true" role="dialog">
+    <div class="legacy-modal">
+      <div class="legacy-modal-title">
+        <span>情境模擬測試</span>
+        <button type="button" class="legacy-modal-close" id="legacy-modal-scenario-close" aria-label="關閉">×</button>
+      </div>
+      <div class="legacy-modal-body" id="legacy-modal-scenario-body"></div>
+      <div class="legacy-modal-footer">
+        <button type="button" class="legacy-btn" id="legacy-modal-scenario-cancel">取消</button>
+        <button type="button" class="legacy-btn legacy-btn-primary" id="legacy-modal-scenario-apply">套用情境</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="legacy-report-modal" class="legacy-report-modal" aria-modal="true" role="dialog">
+    <div class="legacy-report-modal-inner">
+      <div class="legacy-report-modal-title">
+        <span>報告核發</span>
+        <button type="button" class="legacy-btn" id="legacy-report-modal-close">關閉</button>
+      </div>
+      <iframe id="legacy-report-iframe" title="報告核發"></iframe>
+    </div>
+  </div>
+
+  <script src="../src/config/config.js"></script>
+  <script src="../src/constants/cell-types.js"></script>
+  <script src="../src/services/api.service.js"></script>
+  <script src="../src/services/auth.service.js"></script>
+  <script src="../src/services/specimen.service.js"></script>
+  <script src="../src/store/app.store.js"></script>
+  <script>AuthService.requireAuth();</script>
+  <script src="../assets/data/database.js?v=20260712k"></script>
+  <script src="../assets/data/scenario-specimens.js?v=20260712u"></script>
+  <script src="../assets/data/cell-sample-images.js?v=20260712k"></script>
+  <script src="../assets/data/scenario-specimen-cells.js?v=20260712o"></script>
+  <script src="../assets/js/legacy-ui.js?v=20260712k"></script>
+  <script src="../assets/js/usability-study.js?v=20260712n"></script>
+  <script src="../assets/js/common.js?v=20260712k"></script>
+  <script src="../assets/js/legacy-scenario.js?v=20260712n"></script>
+  <script src="../assets/data/lis-mock-data.js?v=20260712u"></script>
+  <script src="../assets/js/legacy-lis.js?v=20260712u"></script>
+  <script src="../assets/js/legacy-image-review.js?v=20260712q"></script>
+  <script>
+    document.getElementById('legacy-tb-save').addEventListener('click', function () {
+      if (typeof window.legacyImageReviewSave === 'function') window.legacyImageReviewSave();
+    });
+  </script>
+</body>
+</html>

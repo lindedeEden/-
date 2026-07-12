@@ -1,0 +1,235 @@
+/**
+ * 血球分類軟體 - 共用樣式
+ */
+.status-capsule {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  border-radius: 9999px;
+  line-height: 1.25;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+/* 游標懸停時：膠囊變綠色＋打勾，內部字體不變 */
+.status-capsule:hover,
+.status-capsule.status-capsule-done {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+}
+/* 預留打勾空間（visibility: hidden 佔位），避免 hover/done 時膠囊寬度變化造成版面抖動 */
+.status-capsule::before {
+  content: '\2713';
+  margin-right: 0.25rem;
+  font-weight: 700;
+  visibility: hidden;
+}
+.status-capsule:hover::before,
+.status-capsule.status-capsule-done::before {
+  visibility: visible;
+}
+.bg-striped {
+  background-color: #f9fafb;
+  background-image: linear-gradient(
+    45deg,
+    #e5e7eb 25%,
+    transparent 25%,
+    transparent 50%,
+    #e5e7eb 50%,
+    #e5e7eb 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 10px 10px;
+}
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.tr-selected {
+  background-color: #eef2ff !important;
+}
+@media (prefers-color-scheme: dark) {
+  .tr-selected {
+    background-color: rgba(79, 70, 229, 0.2) !important;
+  }
+}
+
+/* 全站字體縮放（設在 html 上，Tailwind 的 rem 才會一併縮放） */
+html {
+  --cell-zoom-factor: 1;
+  /* 細胞縮圖與字型同用 rem，避免各檢體／各頁面視覺比例不一致 */
+  --cell-image-size: calc(4.5rem * var(--cell-zoom-factor));
+}
+
+html.font-size-small { font-size: 87.5%; }
+html.font-size-normal { font-size: 100%; }
+html.font-size-large { font-size: 112.5%; }
+html.font-size-xlarge { font-size: 125%; }
+
+.cell-grid {
+  /* 實際欄寬由 image-review.js 依容器 clientWidth 計算（px），避免 Edge auto-fill+rem 與 Chrome 不一致 */
+  grid-template-columns: repeat(auto-fill, var(--cell-image-size, 72px));
+}
+
+.image-review-scroll {
+  scrollbar-gutter: stable;
+}
+
+/*
+ * 大字級時避免 flex 版面被內容撐出視窗外：可捲動區的祖先需 min-height:0，
+ * 否則 flex 子項預設 min-height:auto 會禁止縮小，導致底部被遮住。
+ */
+/* 最大字級時避免頁面出現橫向捲軸；可橫向捲動的區塊維持在各自 overflow-x-auto 容器內 */
+html.font-size-xlarge body {
+  overflow-x: hidden;
+}
+
+/*
+ * 檢體管理篩選區：字級、間距、圓角、內距皆用 px，不隨全站 html rem 縮放。
+ * 篩選列強制單一橫列，空間不足時橫向捲動，不換行。
+ */
+#tutorial-filter-row.filter-row-fixed-font {
+  padding: 8px;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+#tutorial-filter-row.filter-row-fixed-font .filter-row-single-line {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+
+#tutorial-filter-row.filter-row-fixed-font .filter-col {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+#tutorial-filter-row.filter-row-fixed-font .filter-col-date {
+  width: 300px;
+}
+
+#tutorial-filter-row.filter-row-fixed-font .filter-col-dept {
+  width: 150px;
+}
+
+#tutorial-filter-row.filter-row-fixed-font .filter-col-machine {
+  width: 120px;
+}
+
+#tutorial-filter-row.filter-row-fixed-font .filter-col-search {
+  flex: 1 0 200px;
+  width: 220px;
+  min-width: 200px;
+  max-width: 360px;
+}
+
+#tutorial-filter-row.filter-row-fixed-font .filter-col-actions {
+  flex: 0 0 auto;
+}
+
+#tutorial-filter-row.filter-row-fixed-font .filter-date-inputs {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+#tutorial-filter-row.filter-row-fixed-font .filter-date-inputs input[type="date"] {
+  width: 132px;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+
+#tutorial-filter-row.filter-row-fixed-font .filter-col-dept select,
+#tutorial-filter-row.filter-row-fixed-font .filter-col-machine select,
+#tutorial-filter-row.filter-row-fixed-font .filter-col-search input[type="text"] {
+  margin-top: 4px;
+}
+
+#tutorial-filter-row.filter-row-fixed-font select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#tutorial-filter-row.filter-row-fixed-font label,
+#tutorial-filter-row.filter-row-fixed-font input,
+#tutorial-filter-row.filter-row-fixed-font select,
+#tutorial-filter-row.filter-row-fixed-font button,
+#tutorial-filter-row.filter-row-fixed-font span,
+#filter-panel.filter-row-fixed-font label,
+#filter-panel.filter-row-fixed-font input,
+#filter-panel.filter-row-fixed-font span,
+#filter-panel.filter-row-fixed-font p {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+#tutorial-filter-row.filter-row-fixed-font input:not([type="checkbox"]),
+#tutorial-filter-row.filter-row-fixed-font select {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+}
+
+#tutorial-filter-row.filter-row-fixed-font input:not([type="checkbox"]):focus,
+#tutorial-filter-row.filter-row-fixed-font select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 1px #4f46e5;
+}
+
+#tutorial-filter-row.filter-row-fixed-font button#btn-search {
+  padding: 6px 16px;
+  border: none;
+  background-color: #4f46e5;
+  color: #fff;
+}
+
+#tutorial-filter-row.filter-row-fixed-font button#btn-search:hover {
+  background-color: #4338ca;
+}
+
+#filter-panel.filter-row-fixed-font {
+  padding: 12px;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+#filter-panel.filter-row-fixed-font .filter-panel-title {
+  margin-bottom: 8px;
+}
+
+#filter-panel.filter-row-fixed-font .filter-panel-check-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 4px;
+}
+
+#filter-panel.filter-row-fixed-font .filter-panel-check-row label {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* 表頭可點擊排序 */
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover { color: #4F46E5; }
+th .sort-icon { opacity: 0.4; }
+th.sort-asc .sort-icon-asc,
+th.sort-desc .sort-icon-desc { opacity: 1; }

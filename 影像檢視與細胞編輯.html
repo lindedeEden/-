@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html class="light font-size-normal" lang="zh-TW"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>影像檢視與細胞編輯 - 血球型態分類軟體</title>
+<script>
+        (function () {
+            try {
+                var root = document.documentElement;
+                var fontKey = 'blood-morphology-font-level';
+                var fontClasses = ['font-size-small', 'font-size-normal', 'font-size-large', 'font-size-xlarge'];
+                var fontRaw = window.localStorage.getItem(fontKey);
+                var fontLevel = parseInt(fontRaw, 10);
+                if (isNaN(fontLevel)) fontLevel = 1;
+                fontLevel = Math.max(0, Math.min(3, fontLevel));
+                fontClasses.forEach(function (c) { root.classList.remove(c); });
+                root.classList.add(fontClasses[fontLevel]);
+
+                var zoomKey = 'blood-morphology-cell-image-zoom';
+                var zoomRaw = window.localStorage.getItem(zoomKey);
+                var zoom = parseInt(zoomRaw, 10);
+                if (isNaN(zoom)) zoom = 100;
+                zoom = Math.max(50, Math.min(200, zoom));
+                var fontScale = [0.875, 1, 1.125, 1.25][fontLevel];
+                var cellPx = 4.5 * (zoom / 100) * 16 * fontScale;
+                root.style.setProperty('--cell-zoom-factor', String(zoom / 100));
+                root.style.setProperty('--cell-image-size', cellPx.toFixed(2) + 'px');
+            } catch (e) {}
+        })();
+    </script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#197fe6",
+                        "background-light": "#f8f9fa",
+                        "background-dark": "#111921",
+                        "card": "#ffffff",
+                        "card-dark": "#1a242d"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'subtle': '0 2px 4px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.04)',
+                        'subtle-dark': '0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.2)',
+                        'context': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0,0,0,0.05)'
+                    },
+                    keyframes: {
+                        'scale-in': {
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        }
+                    },
+                    animation: {
+                        'scale-in': 'scale-in 0.1s ease-out forwards',
+                    }
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24
+        }
+        .dropdown-container:focus-within .dropdown-menu {
+            display: block;
+        }
+        .back-link-group:hover .back-icon {
+            transform: translateX(-4px);
+        }
+        #context-menu {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            transform-origin: top left;
+            max-height: calc(100vh - 16px);
+            overflow-y: auto;
+        }
+        .menu-item {
+            @apply flex items-center justify-center h-9 text-[11px] font-semibold rounded border border-gray-300 bg-white text-gray-700 hover:bg-primary/5 hover:border-primary hover:text-primary transition-all active:scale-[0.98] shadow-sm leading-tight;
+        }
+        .menu-item-danger {
+            @apply flex items-center justify-center h-9 text-[11px] font-semibold rounded border border-red-200 bg-white text-red-600 hover:bg-red-50 transition-all active:scale-[0.98] shadow-sm leading-tight;
+        }
+        .grid-collapsed {
+            max-height: 120px;
+            overflow: hidden;
+        }
+        .grid-expanded {
+            max-height: none;
+        }
+        .icon-rotate-180 {
+            transform: rotate(180deg);
+        }
+    </style>
+<link rel="stylesheet" href="assets/css/common.css"/>
+<link rel="stylesheet" href="assets/css/tutorial.css"/>
+</head>
+<body class="bg-background-light font-display text-gray-800 text-sm min-h-0">
+<div class="flex h-screen w-full min-h-0 overflow-hidden">
+<aside class="w-1/3 min-w-[300px] max-w-[420px] flex-shrink-0 bg-card border-r border-gray-300/80 flex flex-col p-4 space-y-4 min-h-0 overflow-y-auto overscroll-contain">
+<div class="space-y-4">
+<div id="tutorial-image-tl">
+<div class="flex flex-col gap-2 px-1">
+<a class="back-link-group inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-primary transition-colors duration-200 cursor-pointer" href="檢體管理.html" id="back-to-list">
+<span class="back-icon material-symbols-outlined text-[18px] transition-transform duration-200">arrow_back</span>
+                    返回列表
+                </a>
+<h1 class="text-2xl font-bold leading-tight text-gray-900" id="specimen-id-title"></h1>
+</div>
+<div class="flex flex-wrap items-center gap-2 px-1">
+<div id="sidebar-status-tags" class="flex flex-wrap items-center gap-2"></div>
+<div class="relative dropdown-container" id="sidebar-add-flag">
+<button type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-dashed border-gray-300 text-gray-600 text-[10px] font-medium hover:bg-gray-50 transition-colors" id="add-flag-btn">
+<span class="material-symbols-outlined text-sm">add</span>
+                        Add Flag
+                    </button>
+<div class="dropdown-menu absolute left-0 top-full mt-2 w-48 bg-white border border-gray-300 rounded-lg shadow-xl z-50 hidden">
+<div class="p-2 border-b border-gray-200">
+<span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2">Toggle Status</span>
+</div>
+<!-- Add Flag 小圓點與 common.js STATUS_STYLES 膠囊同色調（*-500 對應各狀態主色） -->
+<div class="p-1 space-y-0.5">
+<label class="w-full flex items-center gap-2.5 px-2 py-2 hover:bg-gray-50 rounded cursor-pointer group select-none" data-flag="AI Alert" role="button">
+<div class="w-2 h-2 rounded-full bg-orange-500"></div>
+<span class="text-xs font-medium text-gray-700">AI分類警示</span>
+</label>
+<label class="w-full flex items-center gap-2.5 px-2 py-2 hover:bg-gray-50 rounded cursor-pointer select-none" data-flag="PLT Check" role="button">
+<div class="w-2 h-2 rounded-full bg-blue-500"></div>
+<span class="text-xs font-medium text-gray-700">血小板確認</span>
+</label>
+<label class="w-full flex items-center gap-2.5 px-2 py-2 hover:bg-gray-50 rounded cursor-pointer select-none" data-flag="Follow-up" role="button">
+<div class="w-2 h-2 rounded-full bg-red-500"></div>
+<span class="text-xs font-medium text-gray-700">需拉片確認</span>
+</label>
+<label class="w-full flex items-center gap-2.5 px-2 py-2 hover:bg-gray-50 rounded cursor-pointer select-none" data-flag="Digital Review" role="button">
+<div class="w-2 h-2 rounded-full bg-purple-500"></div>
+<span class="text-xs font-medium text-gray-700">數位閱片</span>
+</label>
+</div>
+</div>
+</div>
+</div>
+<div class="border-b border-gray-300/80 w-full pt-1"></div>
+<div class="flex flex-col py-2 px-1 space-y-2">
+<div class="flex items-center gap-2">
+<div class="relative flex-1 group">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-lg group-focus-within:text-primary transition-colors">search</span>
+<input id="sidebar-search" class="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-gray-300 bg-gray-50 focus:ring-primary focus:border-primary" placeholder="檢體 ID 搜尋…" type="text"/>
+</div>
+<div class="flex gap-1">
+<button type="button" id="sidebar-prev" class="flex items-center justify-center size-8 rounded border border-gray-300 hover:bg-gray-50 text-gray-600 transition-colors">
+<span class="material-symbols-outlined text-xl">chevron_left</span>
+</button>
+<button type="button" id="sidebar-next" class="flex items-center justify-center size-8 rounded border border-gray-300 hover:bg-gray-50 text-gray-600 transition-colors">
+<span class="material-symbols-outlined text-xl">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="tutorial-image-bl">
+<details id="sidebar-patient-details" class="group border border-gray-300/80 rounded-lg shadow-subtle overflow-hidden" open="">
+<summary class="flex items-center justify-between py-2 px-3 cursor-pointer list-none bg-white hover:bg-gray-50 transition-colors">
+<div class="flex items-center gap-2">
+<h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">檢體資訊</h3>
+<span class="patient-name-summary text-xs text-gray-600"></span>
+</div>
+<span class="material-symbols-outlined text-gray-400 transition-transform duration-200 group-open:rotate-180">expand_more</span>
+</summary>
+<div class="px-3 pb-2 pt-0">
+<div class="patient-info-grid grid grid-cols-2 gap-x-6 gap-y-0.5 text-[11px] leading-snug">
+<div><span class="font-medium text-gray-600">病歷號:</span> <span id="sidebar-patient-id" class="font-normal text-gray-700"></span></div>
+<div><span class="font-medium text-gray-600">科別:</span> <span id="sidebar-patient-dept" class="font-normal text-gray-700"></span></div>
+<div><span class="font-medium text-gray-600">機台:</span> <span id="sidebar-patient-machine" class="font-normal text-gray-700"></span></div>
+<div><span class="font-medium text-gray-600">歸位:</span> <span id="sidebar-patient-location" class="font-normal text-gray-700"></span></div>
+</div>
+</div>
+</details>
+<div class="border border-gray-300/80 rounded-lg p-3 flex-grow min-h-0 shadow-subtle flex flex-col overflow-hidden">
+<h3 class="text-sm font-semibold text-gray-900 pb-2 flex-shrink-0 uppercase tracking-wider">分析與歷史報告</h3>
+<div class="flex-grow min-h-0 overflow-y-auto pr-1" id="sidebar-analysis-table">
+  <!-- 由 image-review.js 動態產生分析與歷史報告表格 -->
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col bg-white overflow-hidden relative min-h-0 min-w-0">
+<header class="min-h-[3rem] shrink-0 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2 px-4 sm:px-6 bg-white/95 backdrop-blur border-b border-gray-300/80 sticky top-0 z-20" id="tutorial-image-tr">
+<div class="flex items-center gap-4 flex-1 min-w-0 max-w-md">
+<span id="toolbar-progress-text" class="text-sm font-semibold text-gray-700 whitespace-nowrap"></span>
+<div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+<div id="toolbar-progress-bar" class="h-full bg-primary transition-all duration-300" style="width: 75%;"></div>
+</div>
+</div>
+<div class="flex flex-wrap items-center justify-end gap-2 shrink-0">
+<div class="flex items-center bg-gray-100 rounded-lg p-0.5">
+<button type="button" class="flex items-center justify-center size-8 rounded-md hover:bg-white text-gray-600 hover:text-primary transition-all" id="zoom-out" title="縮小影像">
+<span class="material-symbols-outlined text-xl">remove</span>
+</button>
+<span class="px-2 text-xs font-medium text-gray-600 min-w-[3rem] text-center" id="zoom-value">100%</span>
+<button type="button" class="flex items-center justify-center size-8 rounded-md hover:bg-white text-gray-600 hover:text-primary transition-all" id="zoom-in" title="放大影像">
+<span class="material-symbols-outlined text-xl">add</span>
+</button>
+</div>
+<div class="flex items-center bg-gray-100 rounded-lg p-0.5" title="字型大小（與檢體管理同步）">
+<button type="button" class="flex items-center justify-center size-8 rounded-md hover:bg-white text-gray-600 hover:text-primary transition-all" id="font-smaller" title="縮小字型">
+<span class="material-symbols-outlined text-xl">remove</span>
+</button>
+<span class="px-1 text-[10px] font-medium text-gray-600 min-w-[1.75rem] text-center select-none">字型</span>
+<button type="button" class="flex items-center justify-center size-8 rounded-md hover:bg-white text-gray-600 hover:text-primary transition-all" id="font-larger" title="放大字型">
+<span class="material-symbols-outlined text-xl">add</span>
+</button>
+</div>
+<div class="w-px h-6 bg-gray-300 mx-1"></div>
+<button class="flex items-center justify-center size-8 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button type="button" class="flex items-center justify-center h-8 px-4 rounded-lg bg-primary hover:bg-blue-600 text-white text-xs font-bold gap-2 transition-colors uppercase tracking-wide" id="btn-save-report">
+<span class="material-symbols-outlined text-sm">save</span>
+                    儲存並核發報告
+                </button>
+</div>
+</header>
+<div id="image-review-readonly-banner" class="hidden shrink-0 px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-950 text-sm font-medium text-center" role="status">
+        唯讀模式：數位閱片已完成，僅能檢視影像與縮放，無法變更細胞分類或核發報告。
+    </div>
+<div class="flex-1 min-h-0 overflow-y-auto p-6 scroll-smooth overscroll-contain image-review-scroll">
+<div class="w-full min-w-0 space-y-6" id="main-cell-groups">
+  <!-- 初始不放任何靜態細胞卡片，全部由 image-review.js 動態產生 -->
+</div>
+</div>
+</main>
+</div>
+<div id="modal-save-block" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+<div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 border border-gray-300">
+<h3 class="text-lg font-bold text-gray-900 mb-2">無法儲存報告</h3>
+<p class="modal-message text-sm text-gray-600 mb-4"></p>
+<button type="button" id="modal-save-block-close" class="w-full py-2.5 rounded-lg bg-primary text-white font-semibold hover:opacity-90">返回編輯</button>
+</div>
+</div>
+<div id="report-issue-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+<div class="bg-white rounded-xl shadow-2xl w-full max-w-[1150px] h-[90vh] rounded-xl overflow-hidden relative border border-gray-300">
+<iframe id="report-issue-iframe" src="" class="w-full h-full border-0"></iframe>
+</div>
+</div>
+<div class="w-64 max-h-[min(90vh,520px)] bg-white rounded-xl shadow-context border border-gray-300 flex flex-col overflow-y-auto min-h-0 animate-scale-in" id="context-menu">
+<div class="context-ai-block bg-blue-50 p-2.5 border-b border-blue-100">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-primary">psychology</span>
+<span class="text-[10px] font-bold text-primary uppercase tracking-wider">AI Suggestion</span>
+</div>
+<span class="ai-suggestion-label text-[10px] font-bold text-blue-600">92%</span>
+</div>
+<button type="button" class="ai-move-btn w-full py-2 bg-primary hover:bg-blue-600 text-white text-[11px] font-bold rounded shadow-sm transition-all active:scale-[0.98]">Move to Segmented</button>
+</div>
+<div class="p-2 space-y-3">
+<div>
+<div class="px-1 mb-1.5">
+<span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Common Types</span>
+</div>
+<div class="grid grid-cols-2 gap-1.5 mb-1.5">
+<button type="button" class="menu-item" data-category="Lymphocyte">Lym</button>
+<button type="button" class="menu-item" data-category="Monocyte">Mono</button>
+<button type="button" class="menu-item" data-category="Eosinophil">Eo</button>
+<button type="button" class="menu-item" data-category="Basophil">Baso</button>
+<button type="button" class="menu-item" data-category="Segmented Neutrophil">Seg</button>
+<button type="button" class="menu-item" data-category="Band">Band</button>
+<button type="button" class="menu-item" data-category="Giant PLT">Giant PLT</button>
+<button type="button" class="menu-item" data-category="NRBC">NRBC</button>
+</div>
+<button type="button" class="menu-item w-full" data-category="Smudge Cell">Smudge Cell</button>
+</div>
+<div class="bg-red-50 p-2 rounded-lg border border-red-100">
+<div class="flex items-center gap-1.5 px-0.5 mb-1.5">
+<span class="material-symbols-outlined text-[14px] text-red-500 font-bold">warning</span>
+<span class="text-[9px] font-bold text-red-600 uppercase tracking-widest">Abnormal</span>
+</div>
+<div class="grid grid-cols-2 gap-1.5 mb-1.5">
+<button type="button" class="menu-item-danger" data-category="Blast">Blast</button>
+<button type="button" class="menu-item-danger" data-category="Hypersegmented">Hyperseg.</button>
+<button type="button" class="menu-item-danger" data-category="Promyelocyte">Promyelocyte</button>
+<button type="button" class="menu-item-danger" data-category="Atypical Lymphocyte">Aty-Lym</button>
+<button type="button" class="menu-item-danger" data-category="Myelocyte">Myelocyte</button>
+<button type="button" class="menu-item-danger" data-category="Megakaryocyte">Megakaryo</button>
+</div>
+<button type="button" class="menu-item-danger w-full" data-category="Metamyelocyte">Metamyelocyte</button>
+</div>
+<details class="group">
+<summary class="flex items-center justify-between px-1 cursor-pointer list-none">
+<span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">More Options</span>
+<span class="material-symbols-outlined text-sm text-gray-400 group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="grid grid-cols-1 gap-1 mt-2">
+<button type="button" class="menu-item justify-start px-3" data-category="Abnormal Lymphocyte">Abn. Lym</button>
+<button type="button" class="menu-item justify-start px-3" data-category="Plasma Cell">Plasma Cell</button>
+<button type="button" class="menu-item justify-start px-3" data-category="Promonocyte">Promonocyte</button>
+<button type="button" class="menu-item justify-start px-3" data-category="Unidentified">Unidentified</button>
+<button type="button" class="menu-item justify-start px-3" data-category="Artefact">Artefact</button>
+</div>
+</details>
+</div>
+</div>
+
+  <!-- ▌ v2 架構層：必須在 database.js / common.js 之前載入 -->
+  <script src="src/config/config.js"></script>
+  <script src="src/constants/cell-types.js"></script>
+  <script src="src/services/api.service.js"></script>
+  <script src="src/services/auth.service.js"></script>
+  <script src="src/services/specimen.service.js"></script>
+  <script src="src/store/app.store.js"></script>
+  <!-- ▌ Auth Guard：未登入直接導回登入頁 -->
+  <script>AuthService.requireAuth();</script>
+  <!-- ▌ 原版資料與共用模組 -->
+  <script src="assets/data/database.js?v=20260618g"></script>
+  <script src="assets/data/scenario-specimens.js?v=20260618g"></script>
+  <script src="assets/data/cell-sample-images.js?v=20260601f"></script>
+  <script src="assets/data/scenario-specimen-cells.js?v=20260618h"></script>
+  <script src="assets/js/common.js?v=20260618k"></script>
+  <script src="assets/js/usability-study.js?v=20260618g"></script>
+  <script src="assets/js/tutorial.js?v=20260618t"></script>
+  <script src="assets/js/image-review.js?v=20260618j"></script>
+<script>
+    function toggleGrid(headerEl) {
+      var card = headerEl && headerEl.closest ? headerEl.closest('.group') : (headerEl && headerEl.parentElement);
+      if (!card) return;
+      var content = card.querySelector('.grid-content');
+      var icon = card.querySelector('.toggle-icon');
+      if (content) {
+        if (content.classList.contains('grid-expanded')) {
+          content.classList.remove('grid-expanded');
+          content.classList.add('grid-collapsed');
+          if (icon) icon.classList.remove('icon-rotate-180');
+        } else {
+          content.classList.remove('grid-collapsed');
+          content.classList.add('grid-expanded');
+          if (icon) icon.classList.add('icon-rotate-180');
+        }
+      }
+    }
+    (function () {
+      var contextMenu = document.getElementById('context-menu');
+      if (contextMenu) {
+        document.addEventListener('click', function (e) {
+          if (!contextMenu.contains(e.target)) contextMenu.style.display = 'none';
+        });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') contextMenu.style.display = 'none';
+        });
+        contextMenu.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      }
+      var backEl = document.getElementById('back-to-list');
+      if (backEl) backEl.addEventListener('click', function (e) { e.preventDefault(); if (typeof goToSpecimenList === 'function') goToSpecimenList(); });
+      if (window.Tutorial) setTimeout(function () { Tutorial.runOnImagePage(); }, 300);
+    })();
+</script>
+
+</body></html>

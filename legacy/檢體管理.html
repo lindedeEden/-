@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CellaVision - Remote Review Software - 檢體管理</title>
+  <link rel="stylesheet" href="../assets/css/legacy.css?v=20260712q"/>
+  <link rel="stylesheet" href="../assets/css/legacy-lis.css?v=20260712u"/>
+</head>
+<body class="legacy-ui">
+  <div class="legacy-app">
+    <div class="legacy-titlebar">CellaVision - Remote Review Software - 週邊血液 和 體液</div>
+    <nav class="legacy-menubar">
+      <a href="#">檔案(F)</a>
+      <a href="#">檢視(V)</a>
+      <a href="#">工具(T)</a>
+      <a href="#">說明(H)</a>
+      <button type="button" class="legacy-menu-btn" id="legacy-btn-lis">LIS 查詢</button>
+      <button type="button" class="legacy-menu-btn" id="legacy-btn-scenario">情境模擬測試</button>
+      <button type="button" class="legacy-menu-btn" id="legacy-btn-modern-ui">切換改善版介面</button>
+    </nav>
+    <div class="legacy-toolbar-block">
+      <div class="legacy-toolbar">
+        <div class="legacy-toolbar-group">
+          <button type="button" class="legacy-tb-btn legacy-tb-btn-folder" title="開啟資料夾"><span class="legacy-tb-glyph">📁</span></button>
+          <button type="button" class="legacy-tb-btn" title="檢視"><span class="legacy-tb-glyph legacy-tb-glyph-circle">○</span></button>
+          <button type="button" class="legacy-tb-btn" title="波形"><span class="legacy-tb-glyph legacy-tb-glyph-wave">∿</span></button>
+          <button type="button" class="legacy-tb-btn" title="文件"><span class="legacy-tb-glyph">📄</span></button>
+        </div>
+        <div class="legacy-toolbar-fields">
+          <span class="legacy-toolbar-label">檢驗單 :</span>
+          <span class="legacy-toolbar-field" id="legacy-toolbar-specimen-id">&nbsp;</span>
+          <span class="legacy-toolbar-label">玻片 :</span>
+          <span class="legacy-toolbar-field legacy-toolbar-field-short" id="legacy-toolbar-slide-no">&nbsp;</span>
+        </div>
+        <div class="legacy-toolbar-group legacy-toolbar-group-actions">
+          <button type="button" class="legacy-tb-btn" title="復原"><span class="legacy-tb-glyph">↶</span></button>
+          <button type="button" class="legacy-tb-btn" title="使用者"><span class="legacy-tb-glyph">👤</span></button>
+          <button type="button" class="legacy-tb-btn legacy-tb-btn-f" title="功能"><span class="legacy-tb-glyph legacy-tb-glyph-f">F</span></button>
+        </div>
+      </div>
+    </div>
+    <div id="legacy-scenario-banner" class="legacy-scenario-banner hidden"></div>
+    <div class="legacy-main">
+      <aside class="legacy-worklist">
+        <div class="legacy-panel-title">工作清單</div>
+        <div class="legacy-worklist-table-wrap">
+          <table>
+            <thead>
+              <tr><th>檢驗單 ID</th></tr>
+            </thead>
+            <tbody id="legacy-worklist-tbody"></tbody>
+          </table>
+        </div>
+        <div class="legacy-worklist-actions">
+          <button type="button" class="legacy-btn" id="legacy-btn-open-worklist">開啟</button>
+          <button type="button" class="legacy-btn" id="legacy-btn-del-worklist">移除</button>
+        </div>
+      </aside>
+      <div class="legacy-center-column">
+      <section class="legacy-center">
+        <div class="legacy-search-panel">
+          <div class="legacy-search-title">搜尋條件</div>
+          <div class="legacy-search-inner">
+            <div class="legacy-search-row legacy-search-row-date">
+              <select class="legacy-select" id="legacy-view-mode" title="檢視模式">
+                <option value="latest" selected>檢視最新</option>
+                <option value="all">檢視全部</option>
+              </select>
+              <div class="legacy-date-spin-group" aria-label="開始日期">
+                <input type="number" class="legacy-spin" id="legacy-date-start-y" min="2000" max="2099" value="2025" aria-label="年"/>
+                <span class="legacy-date-sep">/</span>
+                <input type="number" class="legacy-spin legacy-spin-month" id="legacy-date-start-m" min="1" max="12" value="7" aria-label="月"/>
+                <span class="legacy-date-sep">/</span>
+                <input type="number" class="legacy-spin legacy-spin-day" id="legacy-date-start-d" min="1" max="31" value="31" aria-label="日"/>
+              </div>
+              <span class="legacy-search-and">和</span>
+              <div class="legacy-date-spin-group" aria-label="結束日期">
+                <input type="number" class="legacy-spin" id="legacy-date-end-y" min="2000" max="2099" value="2025" aria-label="年"/>
+                <span class="legacy-date-sep">/</span>
+                <input type="number" class="legacy-spin legacy-spin-month" id="legacy-date-end-m" min="1" max="12" value="8" aria-label="月"/>
+                <span class="legacy-date-sep">/</span>
+                <input type="number" class="legacy-spin legacy-spin-day" id="legacy-date-end-d" min="1" max="31" value="7" aria-label="日"/>
+              </div>
+              <select class="legacy-select" id="legacy-view-scope" title="檢視範圍">
+                <option value="all" selected>檢視所有</option>
+                <option value="mine">檢視我的</option>
+              </select>
+            </div>
+            <div class="legacy-search-row legacy-search-row-filter">
+              <div class="legacy-filter-group">
+                <select class="legacy-select" id="legacy-filter-field">
+                  <option value="" selected>無</option>
+                  <option value="id">檢體單 ID</option>
+                  <option value="patientId">患者 ID</option>
+                  <option value="name">姓名</option>
+                  <option value="department">科別</option>
+                </select>
+                <span class="legacy-filter-eq">=</span>
+                <input type="text" class="legacy-filter-input" id="legacy-filter-value" value=""/>
+              </div>
+              <div class="legacy-filter-group legacy-filter-group-disabled">
+                <select class="legacy-select" disabled aria-disabled="true"><option>&nbsp;</option></select>
+                <select class="legacy-select" disabled aria-disabled="true"><option>&nbsp;</option></select>
+                <span class="legacy-filter-eq">=</span>
+                <input type="text" class="legacy-filter-input" disabled aria-disabled="true" value=""/>
+              </div>
+            </div>
+            <div class="legacy-search-row legacy-search-row-actions">
+              <button type="button" class="legacy-btn" id="legacy-btn-search">搜尋</button>
+              <label class="legacy-exact-label">
+                <input type="checkbox" id="legacy-exact-match"/>
+                <span>僅顯示完全相符項</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="legacy-table-wrap">
+          <table class="legacy-specimen-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>檢體單 ID</th>
+                <th>患者 ID</th>
+                <th>姓名</th>
+                <th>科別</th>
+                <th>簽核者</th>
+                <th>已分析</th>
+                <th>下單醫師</th>
+              </tr>
+            </thead>
+            <tbody id="legacy-specimen-tbody"></tbody>
+          </table>
+        </div>
+        <div class="legacy-bottom-bar">
+          <button type="button" class="legacy-btn" id="legacy-btn-add-worklist">新增至工作清單</button>
+          <button type="button" class="legacy-btn">匯出</button>
+          <button type="button" class="legacy-btn legacy-btn-primary" id="legacy-btn-start">開始</button>
+          <button type="button" class="legacy-btn">標記/取消標記為 STAT</button>
+          <button type="button" class="legacy-btn">瀏覽/編輯摘要</button>
+        </div>
+      </section>
+      </div>
+      <aside class="legacy-sidebar">
+        <div class="legacy-sidebar-panel">
+          <div class="legacy-panel-title">檢體單資料</div>
+          <div class="legacy-sidebar-body"><pre id="legacy-request-data">請從清單選擇一筆檢體。</pre></div>
+        </div>
+        <div class="legacy-sidebar-panel">
+          <div class="legacy-panel-title">玻片</div>
+          <div class="legacy-sidebar-body" style="padding:4px;">
+            <table class="legacy-slides-table">
+              <thead>
+                <tr><th></th><th>玻片 ID</th><th>已分析</th><th>簽核者</th></tr>
+              </thead>
+              <tbody id="legacy-slides-tbody"></tbody>
+            </table>
+            <div style="margin-top:4px;display:flex;gap:4px;">
+              <button type="button" class="legacy-btn">開啟</button>
+              <button type="button" class="legacy-btn">刪除</button>
+            </div>
+          </div>
+        </div>
+        <div class="legacy-sidebar-panel legacy-slide-data-panel">
+          <div class="legacy-panel-title">玻片資料</div>
+          <div class="legacy-sidebar-body legacy-slide-data-box">
+            <div id="legacy-slide-data" class="legacy-slide-data-body">請從清單選擇一筆檢體。</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <footer class="legacy-statusbar">
+      <span id="legacy-footer-status">就緒</span>
+      <span>2228 CGDIA | CAP NUM</span>
+    </footer>
+  </div>
+
+  <div id="legacy-specimen-ctx-menu" class="legacy-ctx-menu" role="menu" aria-hidden="true">
+    <button type="button" id="legacy-specimen-ctx-lock">保護並上鎖</button>
+  </div>
+
+  <div id="legacy-modal-scenario" class="legacy-modal-backdrop hidden" aria-modal="true" role="dialog">
+    <div class="legacy-modal">
+      <div class="legacy-modal-title">
+        <span>情境模擬測試</span>
+        <button type="button" class="legacy-modal-close" id="legacy-modal-scenario-close" aria-label="關閉">×</button>
+      </div>
+      <div class="legacy-modal-body" id="legacy-modal-scenario-body"></div>
+      <div class="legacy-modal-footer">
+        <button type="button" class="legacy-btn" id="legacy-modal-scenario-cancel">取消</button>
+        <button type="button" class="legacy-btn legacy-btn-primary" id="legacy-modal-scenario-apply">套用情境</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../src/config/config.js"></script>
+  <script src="../src/constants/cell-types.js"></script>
+  <script src="../src/services/api.service.js"></script>
+  <script src="../src/services/auth.service.js"></script>
+  <script src="../src/services/specimen.service.js"></script>
+  <script src="../src/store/app.store.js"></script>
+  <script>AuthService.requireAuth();</script>
+  <script src="../assets/data/database.js?v=20260712a"></script>
+  <script src="../assets/data/scenario-specimens.js?v=20260712u"></script>
+  <script src="../assets/data/scenario-specimen-cells.js?v=20260712o"></script>
+  <script src="../assets/js/legacy-ui.js?v=20260712a"></script>
+  <script src="../assets/js/usability-study.js?v=20260712n"></script>
+  <script src="../assets/js/common.js?v=20260712p"></script>
+  <script src="../assets/js/legacy-scenario.js?v=20260712n"></script>
+  <script src="../assets/data/lis-mock-data.js?v=20260712u"></script>
+  <script src="../assets/js/legacy-lis.js?v=20260712u"></script>
+  <script src="../assets/js/legacy-specimen-list.js?v=20260712q"></script>
+</body>
+</html>

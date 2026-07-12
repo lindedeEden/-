@@ -1,0 +1,310 @@
+/**
+ * 虛擬 LIS 彈出視窗 — 舊版介面
+ */
+.legacy-lis-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+.legacy-lis-backdrop.show {
+  display: flex;
+}
+
+.legacy-lis-window {
+  width: min(96vw, 920px);
+  height: min(88vh, 620px);
+  background: #ece9d8;
+  border: 2px outset #fff;
+  box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  min-height: 0;
+}
+
+.legacy-lis-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: linear-gradient(180deg, #0a246a 0%, #3a6ea5 100%);
+  color: #fff;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.legacy-lis-titlebar-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.legacy-lis-titlebar .legacy-btn {
+  min-width: 56px;
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+.legacy-lis-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: #d4d0c8;
+  border-bottom: 1px solid #999;
+  flex-shrink: 0;
+}
+
+.legacy-lis-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legacy-lis-toolbar input[type="text"] {
+  width: 140px;
+  height: 20px;
+  border: 1px inset #808080;
+  padding: 1px 4px;
+  font: inherit;
+}
+
+.legacy-lis-body {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.legacy-lis-list-panel {
+  flex: 0 0 33.333%;
+  max-width: 33.333%;
+  border-right: 2px inset #888;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #fff;
+}
+
+.legacy-lis-list-title {
+  padding: 4px 6px;
+  font-weight: 600;
+  background: linear-gradient(180deg, #eee 0%, #ccc 100%);
+  border-bottom: 1px solid #999;
+  flex-shrink: 0;
+}
+
+.legacy-lis-list-scroll {
+  flex: 1 1 auto;
+  overflow: auto;
+  min-height: 0;
+}
+
+.legacy-lis-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.legacy-lis-list-table th,
+.legacy-lis-list-table td {
+  border: 1px solid #aca899;
+  padding: 3px 4px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.legacy-lis-list-table thead th {
+  background: #ebeadb;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.legacy-lis-list-table tbody tr {
+  cursor: pointer;
+}
+
+.legacy-lis-list-table tbody tr:hover td {
+  background: #e8f0fe;
+}
+
+.legacy-lis-list-table thead th.legacy-lis-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.legacy-lis-list-table thead th.legacy-lis-sortable:hover {
+  background: #ddd9ce;
+}
+
+.legacy-lis-list-table tbody tr.selected td {
+  background: #316ac5;
+  color: #fff;
+}
+
+.legacy-lis-plt-flag {
+  margin-left: 4px;
+  font-weight: 700;
+  color: #c00000;
+}
+
+.legacy-lis-detail-panel {
+  flex: 1 1 66.667%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.legacy-lis-patient-bar {
+  padding: 6px 8px;
+  background: #f5f5f0;
+  border-bottom: 1px solid #bbb;
+  flex-shrink: 0;
+}
+
+.legacy-lis-patient-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px 12px;
+}
+
+.legacy-lis-patient-grid .lbl {
+  color: #555;
+  font-size: 10px;
+}
+
+.legacy-lis-patient-grid .val {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.legacy-lis-note-box {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border: 1px inset #808080;
+  background: #fff;
+  min-height: 28px;
+}
+
+.legacy-lis-note-box.alert {
+  background: #fff3cd;
+  border-color: #c9a227;
+  color: #7a5a00;
+  font-weight: 600;
+}
+
+.legacy-lis-note-box.empty {
+  color: #888;
+  font-weight: normal;
+}
+
+.legacy-lis-report-area {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 8px;
+  min-height: 0;
+  background: #fff;
+}
+
+.legacy-lis-report-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.legacy-lis-report-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.legacy-lis-report-table th,
+.legacy-lis-report-table td {
+  border: 1px solid #aca899;
+  padding: 4px 6px;
+  text-align: left;
+}
+
+.legacy-lis-report-table th {
+  background: #ebeadb;
+  width: 28%;
+}
+
+.legacy-lis-report-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.legacy-lis-detail-actions {
+  padding: 6px 8px;
+  border-top: 1px solid #bbb;
+  background: #d4d0c8;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.legacy-lis-history-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 850;
+  background: rgba(0, 0, 0, 0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.legacy-lis-history-backdrop.show {
+  display: flex;
+}
+
+.legacy-lis-history-dialog {
+  background: #ece9d8;
+  border: 2px outset #fff;
+  width: min(92vw, 560px);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.legacy-lis-history-body {
+  padding: 8px;
+  overflow: auto;
+  flex: 1 1 auto;
+  background: #fff;
+}
+
+.legacy-lis-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.legacy-lis-history-table th,
+.legacy-lis-history-table td {
+  border: 1px solid #aca899;
+  padding: 4px 6px;
+}
+
+.legacy-lis-history-table thead th {
+  background: #ebeadb;
+}
+
+.legacy-lis-statusbar {
+  padding: 2px 8px;
+  background: #d4d0c8;
+  border-top: 1px solid #999;
+  font-size: 11px;
+  flex-shrink: 0;
+}
