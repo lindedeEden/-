@@ -40,7 +40,7 @@
     if (sc && sc.id) {
       el.classList.remove('hidden');
       var taskLine = typeof UsabilityStudy.getScenarioTaskCard === 'function'
-        ? UsabilityStudy.getScenarioTaskCard(sc, { legacy: true })
+        ? UsabilityStudy.getScenarioTaskCard(sc)
         : (sc.taskCard || '');
       el.textContent = '情境模擬測試：' + sc.title + (taskLine ? ' — ' + taskLine.split('\n')[0] : '');
     } else {

@@ -236,17 +236,14 @@
     return html.join('');
   }
 
-  function getScenarioTaskCard(scenario, opts) {
+  /** 新版／舊版共用同一組 taskCard（不再使用 taskCardLegacy） */
+  function getScenarioTaskCard(scenario) {
     if (!scenario) return '';
-    opts = opts || {};
-    if (opts.legacy) {
-      return scenario.taskCardLegacy || scenario.taskCard || '';
-    }
     return scenario.taskCard || '';
   }
 
   function buildLegacyTaskCardHtml(scenario) {
-    var text = getScenarioTaskCard(scenario, { legacy: true });
+    var text = getScenarioTaskCard(scenario);
     if (!text) return '';
     return [
       '<div class="legacy-task-card"><strong>任務說明</strong>\n',
