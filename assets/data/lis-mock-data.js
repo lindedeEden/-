@@ -89,28 +89,124 @@
     }
   };
 
-  var DECOY_RECORDS = [
-    row('H5080799001', '88001001', '趙文雄', '男', '1965-02-18', 60, '家醫科', '簡志豪', '201-3', 'DI1',
-      '', 'none', '2025-08-07 14:20',
-      { wbc: '6.10', rbc: '4.60', hgb: '14.5', hct: '43.0', plt: '245', band: '-', seg: '60.0', lymph: '30.0', mono: '7.0', eo: '2.0', baso: '1.0', blast: '-' },
-      [], false
-    ),
-    row('H5080799002', '88001002', '孫麗華', '女', '1980-07-25', 45, '內分泌科', '高美玲', '115-8', 'DI2',
-      '', 'none', '2025-08-07 14:35',
-      { wbc: '7.50', rbc: '4.30', hgb: '13.0', hct: '39.0', plt: '220', band: '1.0', seg: '55.0', lymph: '35.0', mono: '6.0', eo: '2.0', baso: '1.0', blast: '-' },
-      [], false
-    ),
-    row('H5080799003', '88001003', '馬國強', '男', '1955-11-30', 70, '胸腔科', '馮志偉', '090-15', 'DI1',
-      '', 'none', '2025-08-07 15:10',
-      { wbc: '5.80', rbc: '4.05', hgb: '12.0', hct: '36.5', plt: '190', band: '-', seg: '62.0', lymph: '28.0', mono: '6.0', eo: '3.0', baso: '1.0', blast: '-' },
-      [], false
-    ),
-    row('H5080799004', '88001004', '羅秀英', '女', '1992-04-12', 33, '風濕免疫科', '葉佳慧', '125-20', 'DI2',
-      '', 'none', '2025-08-07 15:42',
-      { wbc: '6.40', rbc: '4.18', hgb: '12.6', hct: '37.5', plt: '305', band: '-', seg: '57.0', lymph: '33.0', mono: '6.0', eo: '3.0', baso: '1.0', blast: '-' },
-      [], false
-    )
+  var TARGET_TOTAL = 40;
+
+  var DECOY_SEED = [
+    ['趙文雄', '男', '1965-02-18', 60, '家醫科', '簡志豪', '201-3', 'DI1'],
+    ['孫麗華', '女', '1980-07-25', 45, '內分泌科', '高美玲', '115-8', 'DI2'],
+    ['馬國強', '男', '1955-11-30', 70, '胸腔科', '馮志偉', '090-15', 'DI1'],
+    ['羅秀英', '女', '1992-04-12', 33, '風濕免疫科', '葉佳慧', '125-20', 'DI2'],
+    ['胡建宏', '男', '1988-09-05', 37, '血液腫瘤科', '謝明德', '208-12', 'DI2'],
+    ['郭淑芬', '女', '1975-01-28', 50, '心臟內科', '韓志豪', '132-4', 'DI1'],
+    ['梁俊良', '男', '1968-06-14', 57, '胃腸肝膽科', '鍾雅琪', '098-7', 'DI2'],
+    ['宋佩君', '女', '1998-03-22', 27, '婦產科', '賴俊宇', '156-9', 'DI1'],
+    ['唐志遠', '男', '1948-12-08', 77, '老人醫學科', '范家豪', '045-31', 'DI2'],
+    ['韓淑惠', '女', '1985-08-19', 40, '皮膚科', '石雅雯', '113-11', 'DI1'],
+    ['江明哲', '男', '1971-05-03', 54, '骨科', '丁佳雯', '102-8', 'DI2'],
+    ['白雅婷', '女', '1993-10-16', 32, '神經內科', '潘志偉', '088-6', 'DI1'],
+    ['何宗翰', '男', '1982-07-29', 43, '感染科', '傅家豪', '112-4', 'DI2'],
+    ['呂佩琪', '女', '1960-01-11', 65, '腎臟科', '溫淑芬', '101-9', 'DI1'],
+    ['施俊宏', '男', '1977-04-08', 48, '泌尿科', '錢雅琪', '098-15', 'DI2'],
+    ['游雅雯', '女', '1989-11-02', 36, '過敏及免疫風濕科', '夏明德', '125-18', 'DI1'],
+    ['蔡文傑', '男', '1952-08-21', 73, '胸腔科', '歐志豪', '090-22', 'DI2'],
+    ['翁美玲', '女', '1996-06-07', 29, '一般科', '龔佳蓉', '134-11', 'DI1'],
+    ['薛志偉', '男', '1974-12-30', 51, '心臟外科', '阮俊宇', '126-5', 'DI2'],
+    ['鄧淑娟', '女', '1966-03-14', 59, '血液腫瘤科', '金明哲', '208-9', 'DI1'],
+    ['藍建志', '男', '1984-09-25', 41, '家醫科', '魏佳慧', '201-7', 'DI2'],
+    ['蔣佩君', '女', '1991-02-18', 34, '婦產科', '溫雅雯', '156-14', 'DI1'],
+    ['毛國強', '男', '1958-07-04', 67, '神經內科', '邱家豪', '088-12', 'DI2'],
+    ['康麗華', '女', '1979-10-27', 46, '內分泌科', '黎淑芬', '115-16', 'DI1'],
+    ['鄒文雄', '男', '1963-05-19', 62, '骨科', '武志偉', '132-10', 'DI2'],
+    ['章怡君', '女', '1987-01-08', 38, '皮膚科', '鳳佳雯', '113-19', 'DI1'],
+    ['萬俊賢', '男', '1970-11-23', 55, '感染科', '奚明德', '112-9', 'DI2'],
+    ['紀雅惠', '女', '1994-08-15', 31, '風濕免疫科', '伊雅婷', '125-25', 'DI1'],
+    ['童建國', '男', '1950-04-02', 75, '老人醫學科', '鈕志豪', '045-40', 'DI2'],
+    ['賈美華', '女', '1981-12-09', 44, '心臟內科', '孔佳蓉', '126-8', 'DI1']
   ];
+
+  function makeDecoyReport(seedIdx) {
+    var baseWbc = (5.2 + (seedIdx % 9) * 0.45).toFixed(2);
+    var basePlt = String(160 + (seedIdx * 17) % 160);
+    var seg = (52 + (seedIdx % 12)).toFixed(1);
+    var lymph = (24 + (seedIdx % 10)).toFixed(1);
+    return {
+      wbc: baseWbc,
+      rbc: (3.90 + (seedIdx % 8) * 0.08).toFixed(2),
+      hgb: (11.5 + (seedIdx % 6) * 0.4).toFixed(1),
+      hct: (34.0 + (seedIdx % 8) * 0.8).toFixed(1),
+      plt: basePlt,
+      band: seedIdx % 4 === 0 ? '1.0' : '-',
+      seg: seg,
+      lymph: lymph,
+      mono: (5 + (seedIdx % 3)).toFixed(1),
+      eo: (1 + (seedIdx % 4)).toFixed(1),
+      baso: '1.0',
+      blast: seedIdx % 11 === 0 ? '1.0' : '-'
+    };
+  }
+
+  function makeDecoyHistory(seedIdx) {
+    if (seedIdx % 3 !== 0) return [];
+    return [{
+      date: '2025-06-' + String(10 + (seedIdx % 18)).padStart(2, '0'),
+      wbc: (5.5 + (seedIdx % 7) * 0.3).toFixed(2),
+      plt: String(180 + (seedIdx * 11) % 100),
+      blast: '-',
+      eo: (1.5 + (seedIdx % 3) * 0.5).toFixed(1),
+      summary: '常規追蹤'
+    }];
+  }
+
+  function buildDecoyRecords(existingIds) {
+    var seen = {};
+    (existingIds || []).forEach(function (id) { seen[id] = true; });
+    var out = [];
+    var i = 0;
+    while (out.length < TARGET_TOTAL && i < 200) {
+      var seed = DECOY_SEED[i % DECOY_SEED.length];
+      var seq = 90001 + i;
+      var specimenId = 'H50807' + String(seq).slice(-5);
+      if (seen[specimenId]) {
+        i += 1;
+        continue;
+      }
+      seen[specimenId] = true;
+      var hour = 9 + Math.floor(i / 6);
+      var minute = (i * 7) % 60;
+      var collectedAt = '2025-08-07 ' +
+        String(Math.min(hour, 21)).padStart(2, '0') + ':' +
+        String(minute).padStart(2, '0');
+      var patientId = String(88000000 + (seq % 100000));
+      out.push(row(
+        specimenId,
+        patientId,
+        seed[0],
+        seed[1],
+        seed[2],
+        seed[3],
+        seed[4],
+        seed[5],
+        seed[6],
+        seed[7],
+        '',
+        'none',
+        collectedAt,
+        makeDecoyReport(i),
+        makeDecoyHistory(i),
+        false
+      ));
+      i += 1;
+    }
+    return out;
+  }
+
+  function assembleAllRecords(markerMap) {
+    var scenarioRecords = buildScenarioRecords(markerMap);
+    var existingIds = scenarioRecords.map(function (r) { return r.specimenId; });
+    var need = Math.max(0, TARGET_TOTAL - scenarioRecords.length);
+    var decoys = buildDecoyRecords(existingIds).slice(0, need);
+    return scenarioRecords.concat(decoys);
+  }
 
   function buildMarkerMapFromScenarioAnswerKeys() {
     var map = {};
@@ -339,6 +435,10 @@
       }
     });
 
+    if (records.length !== TARGET_TOTAL) {
+      errors.push('LIS 總筆數應為 ' + TARGET_TOTAL + '，目前為 ' + records.length);
+    }
+
     if (errors.length && typeof console !== 'undefined' && console.warn) {
       console.warn('[LIS 註記驗證] 發現 ' + errors.length + ' 項問題：', errors);
     }
@@ -346,12 +446,12 @@
   }
 
   var markerMap = buildMarkerMap();
-  var records = buildScenarioRecords(markerMap).concat(DECOY_RECORDS);
+  var records = assembleAllRecords(markerMap);
   var lastValidation = validateLisAnnotations(markerMap, records);
 
   function rebuildRecords() {
     markerMap = buildMarkerMap();
-    records = buildScenarioRecords(markerMap).concat(DECOY_RECORDS);
+    records = assembleAllRecords(markerMap);
     lastValidation = validateLisAnnotations(markerMap, records);
     window.LIS_MOCK_DATA.records = records;
     window.LIS_MOCK_DATA.markerMap = markerMap;

@@ -23,16 +23,7 @@
     if (typeof LIS_MOCK_DATA === 'undefined' || !LIS_MOCK_DATA.records) {
       return [];
     }
-    var rows = LIS_MOCK_DATA.records.slice();
-    if (typeof UsabilityStudy !== 'undefined' && UsabilityStudy.isActive && UsabilityStudy.isActive()) {
-      var sc = UsabilityStudy.getActiveScenario && UsabilityStudy.getActiveScenario();
-      if (sc && sc.specimenIds && sc.specimenIds.length) {
-        var idSet = {};
-        sc.specimenIds.forEach(function (id) { idSet[id] = true; });
-        rows = rows.filter(function (r) { return idSet[r.specimenId]; });
-      }
-    }
-    return rows;
+    return LIS_MOCK_DATA.records.slice();
   }
 
   function lastFiveDigits(id) {
